@@ -1,26 +1,22 @@
 ﻿@page "/"
-@inject HttpClient Http
+@using Recipes.Web.Services
+@inject IIngredientsService _ingredientsService
 
 <PageTitle>Recipes</PageTitle>
 
-@if (body == null)
+@if (string.IsNullOrEmpty(body))
 {
     <p><em>Loading...</em></p>
 }
 else
 {
-    <h1>@body.Content</h1>
+    <h1>@body</h1>
 
     <p>Welcome to your new app.</p>
 }
 
 @code {
-    private Body? body;
+    private string body;
 
-    protected override async Task OnInitializedAsync() => body = await Http.GetFromJsonAsync<Body>("data/items.json");
-
-    public class Body
-    {
-        public string? Content { get; set; }
-    }
+    protected override async Task OnInitializedAsync() => body = await _ingredientsService.Get();
 }
