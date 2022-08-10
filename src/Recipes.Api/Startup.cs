@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Recipes.Api.Entities;
+using Recipes.Api.Services;
 using Recipes.Api;
 
 [assembly: FunctionsStartup(typeof(Startup))]
@@ -32,5 +33,7 @@ public class Startup : FunctionsStartup
                    connectionString,
                    databaseName);
            });
+
+        builder.Services.AddScoped<IIngredientsService, IngredientsService>();
     }
 }
