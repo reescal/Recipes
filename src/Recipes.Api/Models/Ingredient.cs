@@ -15,7 +15,7 @@ public class IngredientCreate
     public HashSet<IngredientProperties> Properties { get; set; }
 }
 
-public class IngredientProperties
+public class IngredientProperties : IEntityProperties
 {
     public int LangId { get; set; }
     public string Name { get; set; }
