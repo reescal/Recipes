@@ -20,6 +20,7 @@ public class Startup : FunctionsStartup
 
     public override void Configure(IFunctionsHostBuilder builder)
     {
+        builder.Services.AddApplicationInsightsTelemetry();
         builder.Services.AddDbContextFactory<DocsContext>(
            (DbContextOptionsBuilder opts) =>
            {

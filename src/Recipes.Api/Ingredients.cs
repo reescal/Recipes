@@ -33,10 +33,17 @@ namespace Recipes.Api
         public IActionResult GetIngredients(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get",  Route = "Ingredients")] HttpRequest req)
         {
-            _logger.LogInformation("C# HTTP trigger function processed a request.");
-
-            var ingredients = _ingredientService.Get();
-            return new OkObjectResult(ingredients);
+            _logger.LogError("C# HTTP trigger function processed a request.");
+            try
+            {
+                var ingredients = _ingredientService.Get();
+                return new OkObjectResult(ingredients);
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return new BadRequestObjectResult(ex.Message);
+            }
         }
 
         [FunctionName("GetIngredient")]
