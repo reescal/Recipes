@@ -19,21 +19,21 @@ namespace Recipes.Api.Services
 
         public IEnumerable<Ingredient> Get()
         {
-            using var context = factory.CreateDbContext();
+            var context = factory.CreateDbContext();
             var result = context.Ingredients.AsEnumerable();
             return result;
         }
 
         public async Task<Ingredient> GetAsync(Guid id)
         {
-            using var context = factory.CreateDbContext();
+            var context = factory.CreateDbContext();
             var result = await context.Ingredients.FindAsync(id);
             return result;
         }
 
         public IEnumerable<string> GetNames(int _lang)
         {
-            using var context = factory.CreateDbContext();
+            var context = factory.CreateDbContext();
             var result = context.Ingredients.Select(x => x.Properties
                                                     .Where(y => y.LangId == _lang)
                                                     .SingleOrDefault()
@@ -43,7 +43,7 @@ namespace Recipes.Api.Services
 
         public async Task<string> InsertAsync(IngredientCreate ingredient)
         {
-            using var context = factory.CreateDbContext();
+            var context = factory.CreateDbContext();
 
             var i = new Ingredient
             {
@@ -60,7 +60,7 @@ namespace Recipes.Api.Services
 
         public async Task<Ingredient> UpdateAsync(Guid id, IngredientCreate ingredient)
         {
-            using var context = factory.CreateDbContext();
+            var context = factory.CreateDbContext();
 
             var i = await context.Ingredients.FindAsync(id);
 
