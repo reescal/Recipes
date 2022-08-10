@@ -17,8 +17,6 @@ namespace Recipes.Api.Services
             this.factory = factory;
         }
 
-        public string Gets() => "Hello";
-
         public IEnumerable<Ingredient> Get()
         {
             var context = factory.CreateDbContext();
@@ -88,7 +86,6 @@ namespace Recipes.Api.Services
     public interface IIngredientsService
     {
         public IEnumerable<Ingredient> Get();
-        public string Gets();
         public Task<Ingredient> GetAsync(Guid id);
         public IEnumerable<string> GetNames(int _lang);
         public Task<string> InsertAsync(IngredientCreate ingredient);
