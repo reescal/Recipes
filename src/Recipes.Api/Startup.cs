@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Recipes.Api.Entities;
 using Recipes.Api.Services;
 using Recipes.Api;
+using static Recipes.Api.Constants.DBConstants;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 
@@ -14,24 +15,20 @@ namespace Recipes.Api;
 public class Startup : FunctionsStartup
 {
     private static readonly IConfigurationRoot Configuration = new ConfigurationBuilder()
-        .SetBasePath(Environment.CurrentDirectory)
-        .AddEnvironmentVariables()
-        .Build();
+                                                                    .AddEnvironmentVariables()
+                                                                    .Build();
 
     public override void Configure(IFunctionsHostBuilder builder)
     {
         builder.Services.AddDbContextFactory<DocsContext>(
            (DbContextOptionsBuilder opts) =>
            {
-               var connectionString = Configuration["CosmosDBConnection"];
-               var databaseName = Configuration["DatabaseName"];
+               var connectionString = Configuration[connString];
+               var databaseName = Configuration[dbName];
                if (string.IsNullOrEmpty(connectionString) || string.IsNullOrEmpty(databaseName))
-                   throw new InvalidOperationException(
-                       "Please specify a valid CosmosDB connection string and database name in the local.settings.json file or your Azure Functions Settings.");
+                   throw new InvalidOperationException(ex);
 
-               opts.UseCosmos(
-                   connectionString,
-                   databaseName);
+               opts.UseCosmos(connectionString, databaseName);
            });
 
         builder.Services.AddScoped<IIngredientsService, IngredientsService>();
