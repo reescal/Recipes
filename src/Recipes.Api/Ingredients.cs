@@ -27,6 +27,25 @@ namespace Recipes.Api
             _ingredientService = ingredientService;
         }
 
+        [FunctionName("Get")]
+        [OpenApiOperation(operationId: "Get", tags: new[] { "Ingredients" })]
+        [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "text/plain", bodyType: typeof(string), Description = "The OK response")]
+        public IActionResult Get(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "Hello")] HttpRequest req)
+        {
+            _logger.LogError("C# HTTP trigger function processed a request.");
+            try
+            {
+                var ingredients = _ingredientService.Gets();
+                return new OkObjectResult(ingredients);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return new BadRequestObjectResult(ex.Message);
+            }
+        }
+
         [FunctionName("GetIngredients")]
         [OpenApiOperation(operationId: "GetIngredients", tags: new[] { "Ingredients" })]
         [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "text/plain", bodyType: typeof(IEnumerable<Ingredient>), Description = "The OK response")]
