@@ -18,15 +18,12 @@ public class ApiException : HttpResponseException
     {
         get
         {
-            switch (Response.StatusCode)
+            return Response.StatusCode switch
             {
-                case HttpStatusCode.BadRequest:
-                    return new BadRequestObjectResult(Response.ReasonPhrase);
-                case HttpStatusCode.NotFound:
-                    return new NotFoundObjectResult(Response.ReasonPhrase);
-                default:
-                    return new BadRequestResult();
-            }
+                HttpStatusCode.BadRequest => new BadRequestObjectResult(Response.ReasonPhrase),
+                HttpStatusCode.NotFound => new NotFoundObjectResult(Response.ReasonPhrase),
+                _ => new BadRequestResult(),
+            };
         }
     }
 }
