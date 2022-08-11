@@ -32,5 +32,6 @@ public class Startup : FunctionsStartup
            });
 
         builder.Services.AddScoped<IIngredientsService, IngredientsService>();
+        builder.Services.AddScoped<IMaterialsService, MaterialsService>();
     }
 }
