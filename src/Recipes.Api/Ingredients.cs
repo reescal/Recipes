@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -10,103 +9,117 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
-using Newtonsoft.Json;
 using Recipes.Api.Models;
 using Recipes.Api.Services;
+using Recipes.Api.Wrappers;
+using static Recipes.Api.Constants.Constants;
+using static Recipes.Api.Constants.ContentTypes;
+using static Recipes.Api.Constants.HttpMethods;
+using static Recipes.Api.Wrappers.Helpers;
 
-namespace Recipes.Api
+namespace Recipes.Api;
+
+public class Ingredients
 {
-    public class Ingredients
+    private const string _name = nameof(Ingredients);
+    private readonly ILogger<Ingredients> _logger;
+    private readonly IIngredientsService _ingredientService;
+
+    public Ingredients(ILogger<Ingredients> log, IIngredientsService ingredientService)
     {
-        private readonly ILogger<Ingredients> _logger;
-        private readonly IIngredientsService _ingredientService;
+        _logger = log;
+        _ingredientService = ingredientService;
+    }
 
-        public Ingredients(ILogger<Ingredients> log, IIngredientsService ingredientService)
+    [FunctionName(nameof(GetIngredients))]
+    [OpenApiOperation(operationId: nameof(GetIngredients), tags: new[] { _name })]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: json, bodyType: typeof(IEnumerable<Ingredient>), Description = "The OK response")]
+    public IActionResult GetIngredients(
+        [HttpTrigger(AuthorizationLevel.Anonymous, get,  Route = _name)] HttpRequest req)
+    {
+        var ingredients = _ingredientService.Get();
+        return new OkObjectResult(ingredients);
+    }
+
+    [FunctionName(nameof(GetIngredient))]
+    [OpenApiOperation(operationId: nameof(GetIngredient), tags: new[] { _name })]
+    [OpenApiParameter(name: id, In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The **Id** parameter")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: json, bodyType: typeof(Ingredient), Description = "The OK response")]
+    public async Task<IActionResult> GetIngredient(
+        [HttpTrigger(AuthorizationLevel.Anonymous, get,  Route = _name + "/{id:Guid}")] HttpRequest req, Guid id)
+    {
+        try
         {
-            _logger = log;
-            _ingredientService = ingredientService;
+            var ingredient = await _ingredientService.GetAsync(id);
+            return new OkObjectResult(ingredient);
         }
-
-        [FunctionName("GetIngredients")]
-        [OpenApiOperation(operationId: "GetIngredients", tags: new[] { "Ingredients" })]
-        [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "text/plain", bodyType: typeof(IEnumerable<Ingredient>), Description = "The OK response")]
-        public IActionResult GetIngredients(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get",  Route = "Ingredients")] HttpRequest req)
+        catch (ApiException ex)
         {
-            _logger.LogInformation("C# HTTP trigger function processed a request.");
-
-            var ingredients = _ingredientService.Get();
-            return new OkObjectResult(ingredients);
+            return ex.Exception;
         }
+    }
 
-        [FunctionName("GetIngredient")]
-        [OpenApiOperation(operationId: "GetIngredient", tags: new[] { "Ingredients" })]
-        [OpenApiParameter(name: "id", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The **Id** parameter")]
-        [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "text/plain", bodyType: typeof(Ingredient), Description = "The OK response")]
-        public async Task<IActionResult> GetIngredient(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get",  Route = "Ingredients/{id:Guid}")] HttpRequest req, Guid id)
+    [FunctionName(nameof(GetIngredientNames))]
+    [OpenApiOperation(operationId: nameof(GetIngredientNames), tags: new[] { _name })]
+    [OpenApiParameter(name: langId, In = ParameterLocation.Query, Required = true, Type = typeof(int), Description = "The **Lang Id** parameter")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: json, bodyType: typeof(IEnumerable<string>), Description = "The OK response")]
+    public IActionResult GetIngredientNames(
+        [HttpTrigger(AuthorizationLevel.Anonymous, get, Route = _name + "/Names")] HttpRequest req)
+    {
+        try
         {
-            _logger.LogInformation("C# HTTP trigger function processed a request.");
-
-            var ingredients = await _ingredientService.GetAsync(id);
-
-            if (ingredients == null)
-                return new NotFoundResult();
-
-            return new OkObjectResult(ingredients);
-        }
-
-        [FunctionName("GetIngredientNames")]
-        [OpenApiOperation(operationId: "GetIngredientNames", tags: new[] { "Ingredients" })]
-        [OpenApiParameter(name: "langId", In = ParameterLocation.Query, Required = false, Type = typeof(int), Description = "The **Lang Id** parameter")]
-        [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "text/plain", bodyType: typeof(IEnumerable<string>), Description = "The OK response")]
-        public IActionResult GetIngredientNames(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "Ingredients/Names")] HttpRequest req)
-        {
-            _logger.LogInformation("C# HTTP trigger function processed a request.");
-
-            var query = req.Query.TryGetValue("langId", out Microsoft.Extensions.Primitives.StringValues param);
-            int langId = 0;
-            if (query)
-                _ = int.TryParse(param, out langId);
+            _ = int.TryParse(req.Query["langId"], out int langId);
 
             var ingredients = _ingredientService.GetNames(langId);
+
             return new OkObjectResult(ingredients);
         }
-
-        [FunctionName("CreateIngredient")]
-        [OpenApiOperation(operationId: "CreateIngredient", tags: new[] { "Ingredients" })]
-        [OpenApiRequestBody(contentType: "application/json", bodyType: typeof(IngredientCreate), Description = "Ingredient", Required = true)]
-        [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(string), Description = "The OK response")]
-        public async Task<IActionResult> CreateIngredient(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "Ingredients")] HttpRequest req)
+        catch (ApiException ex)
         {
-            _logger.LogInformation("C# HTTP trigger function processed a request.");
+            return ex.Exception;
+        }
+    }
 
-            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            var input = JsonConvert.DeserializeObject<IngredientCreate>(requestBody);
+    [FunctionName(nameof(CreateIngredient))]
+    [OpenApiOperation(operationId: nameof(CreateIngredient), tags: new[] { _name })]
+    [OpenApiRequestBody(contentType: json, bodyType: typeof(IngredientCreate), Description = nameof(Ingredient), Required = true)]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: textPlain, bodyType: typeof(string), Description = "The OK response")]
+    public async Task<IActionResult> CreateIngredient(
+        [HttpTrigger(AuthorizationLevel.Anonymous, post, Route = _name)] HttpRequest req)
+    {
+        try
+        {
+            var input = await DeserializeAsync<IngredientCreate>(req);
 
             var id = await _ingredientService.InsertAsync(input);
 
             return new OkObjectResult(id);
         }
-
-        [FunctionName("UpdateIngredient")]
-        [OpenApiOperation(operationId: "UpdateIngredient", tags: new[] { "Ingredients" })]
-        [OpenApiParameter(name: "id", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The **Id** parameter")]
-        [OpenApiRequestBody(contentType: "application/json", bodyType: typeof(IngredientCreate), Description = "Ingredient", Required = true)]
-        [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(Ingredient), Description = "The OK response")]
-        public async Task<IActionResult> UpdateIngredient(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "Ingredients/{id:Guid}")] HttpRequest req, Guid id)
+        catch(ApiException ex)
         {
-            _logger.LogInformation("C# HTTP trigger function processed a request.");
+            return ex.Exception;
+        }
+    }
 
-            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            var input = JsonConvert.DeserializeObject<IngredientCreate>(requestBody);
+    [FunctionName(nameof(UpdateIngredient))]
+    [OpenApiOperation(operationId: nameof(UpdateIngredient), tags: new[] { _name })]
+    [OpenApiParameter(name: id, In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The **Id** parameter")]
+    [OpenApiRequestBody(contentType: json, bodyType: typeof(IngredientCreate), Description = nameof(Ingredient), Required = true)]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: json, bodyType: typeof(Ingredient), Description = "The OK response")]
+    public async Task<IActionResult> UpdateIngredient(
+        [HttpTrigger(AuthorizationLevel.Anonymous, put, Route = _name + "/{id:Guid}")] HttpRequest req, Guid id)
+    {
+        try
+        {
+            var input = await DeserializeAsync<IngredientCreate>(req);
 
             var obj = await _ingredientService.UpdateAsync(id, input);
 
             return new OkObjectResult(obj);
+        }
+        catch (ApiException ex)
+        {
+            return ex.Exception;
         }
     }
 }
