@@ -37,17 +37,21 @@ public class IngredientsService : IIngredientsService
         return result;
     }
 
-    public IEnumerable<string> GetNames(int _lang)
+    public IEnumerable<SimpleEntity> GetNames(int _lang)
     {
         if (!LangExists(_lang))
             throw new ApiException(InvalidLang(_lang), 400);
 
-        var result = context.Ingredients
-                                    .AsNoTracking()
-                                    .Select(x => x.Properties)
-                                    .AsEnumerable();
-        result = result.Where(x => x.Any(y => y.LangId == _lang));
-        var response = result.Select(x => x.Where(y => y.LangId == _lang).SingleOrDefault().Name);
+        var result = context.Ingredients.AsNoTracking().AsEnumerable();
+        var response = result.Where(x => x.Properties.Any(y => y.LangId == _lang))
+                            .Select(x => new SimpleEntity()
+                            {
+                                Id = x.Id,
+                                Properties = x.Properties
+                                                .Where(y => y.LangId == _lang)
+                                                .Cast<IEntityProperties>()
+                                                .ToHashSet()
+                            });
         return response;
     }
 
@@ -102,7 +106,7 @@ public interface IIngredientsService
 {
     public IEnumerable<Ingredient> Get();
     public Task<Ingredient> GetAsync(Guid id);
-    public IEnumerable<string> GetNames(int _lang);
+    public IEnumerable<SimpleEntity> GetNames(int _lang);
     public Task<string> InsertAsync(IngredientCreate ingredient);
     public Task<Ingredient> UpdateAsync(Guid id, IngredientCreate ingredient);
 }

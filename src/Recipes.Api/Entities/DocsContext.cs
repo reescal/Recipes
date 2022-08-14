@@ -11,6 +11,7 @@ namespace Recipes.Api.Entities
 
         public DbSet<Ingredient> Ingredients { get; set; }
         public DbSet<Material> Materials { get; set; }
+        public DbSet<Recipe> Recipes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -20,6 +21,12 @@ namespace Recipes.Api.Entities
             modelBuilder.Entity<Material>()
                 .HasPartitionKey(x => x.Id)
                 .OwnsMany(x => x.Properties);
+            modelBuilder.Entity<Recipe>()
+                .HasPartitionKey(x => x.Id)
+                .OwnsMany(x => x.Properties)
+                .OwnsMany(x => x.Tags);
+            modelBuilder.Entity<Recipe>()
+                .OwnsMany(x => x.Ingredients);
         }
 
     }
