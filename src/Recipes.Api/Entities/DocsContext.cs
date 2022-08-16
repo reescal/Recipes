@@ -1,4 +1,4 @@
-﻿using Recipes.Api.Models;
+﻿using Recipes.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Recipes.Api.Entities

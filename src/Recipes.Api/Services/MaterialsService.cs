@@ -1,5 +1,5 @@
 ﻿using Recipes.Api.Entities;
-using Recipes.Api.Models;
+using Recipes.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -8,7 +8,7 @@ using System.Linq;
 using Recipes.Api.Wrappers;
 using static Recipes.Api.Wrappers.Helpers;
 using static Recipes.Api.Constants.Responses;
-using Recipes.Api.Interfaces;
+using Recipes.Shared.Interfaces;
 
 namespace Recipes.Api.Services;
 

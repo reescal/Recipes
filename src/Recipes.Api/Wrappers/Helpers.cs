@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
-using Recipes.Api.Interfaces;
+using Recipes.Shared.Interfaces;
 using Recipes.Shared.Enums;
 using System;
 using System.Collections.Generic;
