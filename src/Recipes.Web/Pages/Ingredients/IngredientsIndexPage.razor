@@ -1,0 +1,26 @@
+﻿@page "/Ingredients"
+
+<Search @bind-Value="@_searchValue" OnPressEnter="OnEnter" OnSearch="OnSearch" Loading="@_loading" />
+@Lang.ToString()
+
+@code {
+    private string _searchValue { get; set; } = string.Empty;
+    private bool _loading;
+
+    [CascadingParameter]
+    protected Lang Lang { get; set; }
+
+    public async Task OnSearch()
+    {
+        _loading = true;
+        await Task.Delay(3000);
+        _loading = false;
+    }
+
+    private async Task OnEnter(KeyboardEventArgs e)
+    {
+        _loading = true;
+        await Task.Delay(3000);
+        _loading = false;
+    }
+}
