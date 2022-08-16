@@ -1,9 +1,33 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="page">
-    <main>
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
+<Layout Class="layout">
+    <Header>
+        <div class="logo" />
+        <Menu Theme="MenuTheme.Dark" Mode="MenuMode.Horizontal" DefaultSelectedKeys=@(new[]{nameof(Recipes)})>
+            <MenuItem Key=@nameof(Recipes) RouterLink="/Recipes" RouterMatch="NavLinkMatch.All">Recipes</MenuItem>
+            <MenuItem Key="Ingredients" RouterLink="/Ingredients" RouterMatch="NavLinkMatch.All">Ingredients</MenuItem>
+            <MenuItem Key="Grocery List" RouterLink="/GroceryList" RouterMatch="NavLinkMatch.All">Grocery List</MenuItem>
+            <MenuItem Key="Language" OnClick="ToggleLang">
+                <Icon Type="global" Theme="outline"></Icon>
+            </MenuItem>
+        </Menu>
+    </Header>
+    <Content Style="padding: 0 50px;">
+        <CascadingValue Value="@_lang">
+            <div class="page">
+                <main>
+                    <article class="content px-4">
+                        @Body
+                    </article>
+                </main>
+            </div>
+        </CascadingValue>
+    </Content>
+</Layout>
+
+@code{
+    private Lang _lang = Lang.English;
+    private void ToggleLang(){
+        _lang = _lang == Lang.English ? Lang.Spanish : Lang.English;
+    }
+}

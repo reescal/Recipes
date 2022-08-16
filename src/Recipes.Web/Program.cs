@@ -11,4 +11,6 @@ builder.Services.AddHttpClient("API", x => x.BaseAddress = new Uri(builder.Confi
 
 builder.Services.AddScoped<IIngredientsService, IngredientsService>();
 
+builder.Services.AddAntDesign();
+
 await builder.Build().RunAsync();

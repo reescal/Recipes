@@ -1,4 +1,4 @@
-﻿namespace Recipes.Api.Enums;
+﻿namespace Recipes.Shared.Enums;
 
 public enum Lang
 {
