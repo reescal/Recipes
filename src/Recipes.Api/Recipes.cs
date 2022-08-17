@@ -51,18 +51,21 @@ public class Recipes
 
     [FunctionName(nameof(GetRecipeNames))]
     [OpenApiOperation(operationId: nameof(GetRecipeNames), tags: new[] { _name })]
-    [OpenApiParameter(name: langId, In = ParameterLocation.Query, Required = true, Type = typeof(int), Description = "The **Lang Id** parameter")]
+    [OpenApiParameter(name: langId, In = ParameterLocation.Query, Required = false, Type = typeof(int), Description = "The **Lang Id** parameter")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: json, bodyType: typeof(IEnumerable<string>), Description = "The OK response")]
     public IActionResult GetRecipeNames(
         [HttpTrigger(AuthorizationLevel.Anonymous, get, Route = _name + "/Names")] HttpRequest req)
     {
         try
         {
-            _ = int.TryParse(req.Query["langId"], out int langId);
+            int? lang = null;
 
-            var recipes = _recipeService.GetNames(langId);
+            if (req.Query.ContainsKey("langId"))
+                lang = int.Parse(req.Query["langId"]);
 
-            return new OkObjectResult(recipes);
+            var ingredients = _recipeService.GetNames(lang);
+
+            return new OkObjectResult(ingredients);
         }
         catch (ApiException ex)
         {
