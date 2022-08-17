@@ -1,4 +1,7 @@
-﻿namespace Recipes.Web.Services;
+﻿using System.Net.Http.Json;
+using Recipes.Shared.Models;
+
+namespace Recipes.Web.Services;
 
 public class IngredientsService : IIngredientsService
 {
@@ -9,10 +12,12 @@ public class IngredientsService : IIngredientsService
         _httpClient = clientFactory.CreateClient("API");
     }
 
-    public async Task<string> Get() => await _httpClient.GetStringAsync("api/Ingredients");
+    public async Task<IEnumerable<SimpleEntity>> Get() => await _httpClient.GetFromJsonAsync<IEnumerable<SimpleEntity>>("api/Ingredients/Names");
+    public async Task<Ingredient> Get(Guid id) => await _httpClient.GetFromJsonAsync<Ingredient>($"api/Ingredients/{id}");
 }
 
 public interface IIngredientsService
 {
-    Task<string> Get();
+    Task<IEnumerable<SimpleEntity>> Get();
+    Task<Ingredient> Get(Guid id);
 }
