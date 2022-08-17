@@ -1,22 +1,8 @@
 ﻿@page "/"
-@using Recipes.Web.Services
-@inject IIngredientsService _ingredientsService
 
 <PageTitle>Recipes</PageTitle>
 
-@if (string.IsNullOrEmpty(body))
-{
-    <p><em>Loading...</em></p>
-}
-else
-{
-    <h1>@body</h1>
-
-    <p>Welcome to your new app.</p>
-}
+<p>Welcome to your new app.</p>
 
 @code {
-    private string body;
-
-    protected override async Task OnInitializedAsync() => body = await _ingredientsService.Get();
 }
