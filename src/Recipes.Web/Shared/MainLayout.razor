@@ -3,7 +3,7 @@
 <Layout Class="layout">
     <Header>
         <div class="logo" />
-        <Menu Theme="MenuTheme.Dark" Mode="MenuMode.Horizontal" DefaultSelectedKeys=@(new[]{nameof(Recipes)})>
+        <Menu Theme="MenuTheme.Dark" Mode="MenuMode.Horizontal" DefaultSelectedKeys=@(new[]{nameof(Recipes)}) Selectable=false>
             <MenuItem Key=@nameof(Recipes) RouterLink="/Recipes" RouterMatch="NavLinkMatch.All">Recipes</MenuItem>
             <MenuItem Key="Ingredients" RouterLink="/Ingredients" RouterMatch="NavLinkMatch.All">Ingredients</MenuItem>
             <MenuItem Key="Grocery List" RouterLink="/GroceryList" RouterMatch="NavLinkMatch.All">Grocery List</MenuItem>
@@ -27,7 +27,6 @@
 
 @code{
     private Lang _lang = Lang.English;
-    private void ToggleLang(){
-        _lang = _lang == Lang.English ? Lang.Spanish : Lang.English;
-    }
+
+    private void ToggleLang() => _lang = _lang == Lang.English ? Lang.Spanish : Lang.English;
 }
