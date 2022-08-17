@@ -16,17 +16,11 @@ public class RecipesService : IRecipesService
 {
     private readonly DocsContext context;
 
-    public RecipesService(IDbContextFactory<DocsContext> factory)
-    {
-        context = factory.CreateDbContext();
-    }
+    public RecipesService(IDbContextFactory<DocsContext> factory) => context = factory.CreateDbContext();
 
     public async Task<RecipeResponse> GetAsync(Guid id)
     {
-        var result = await context.Recipes.FindAsync(id);
-
-        if (result == null)
-            throw new ApiException(NotFound(nameof(Recipe), id), 404);
+        var result = await FindById(context.Set<Recipe>(), id);
 
         var ingredientIds = result.Ingredients.Select(x => x.IngredientId);
         var ingredients = context.Ingredients.Where(x => ingredientIds.Contains(x.Id)).AsEnumerable();
@@ -60,36 +54,29 @@ public class RecipesService : IRecipesService
                         Id = x.Id,
                         Properties = x.Properties
                                         .Cast<IEntityProperties>()
-                                        .ToHashSet() 
+                                        .ToHashSet()
                     });
-
         return response;
     }
 
-    public IEnumerable<SimpleEntity> GetNames(int _lang)
+    public IEnumerable<SimpleEntity> GetNames(int? _lang)
     {
-        if (!LangExists(_lang))
-            throw new ApiException(InvalidLang(_lang), 400);
+        IEnumerable<SimpleEntity> response = default;
 
         var result = context.Recipes.AsNoTracking().AsEnumerable();
-        var response = result.Where(x => x.Properties.Any(y => y.LangId == _lang))
-                    .Select(x => new SimpleEntity()
-                    {
-                        Id = x.Id,
-                        Properties = x.Properties
-                                        .Where(y => y.LangId == _lang)
-                                        .Cast<IEntityProperties>()
-                                        .ToHashSet()
-                    });
-
-        return response;
+        response = result.Select(x => new SimpleEntity()
+                                            {
+                                                Id = x.Id,
+                                                Properties = x.Properties
+                                                                    .Cast<IEntityProperties>()
+                                                                    .ToHashSet()
+                                            });
+        return response.FilterLang(_lang);
     }
 
     public async Task<string> InsertAsync(RecipeCreate recipe)
     {
-        if (!LangsExist(recipe.Properties.Cast<IEntityProperties>().ToHashSet()))
-            throw new ApiException(PropertyInvalidLang(nameof(Recipe)), 400);
-
+        CheckLanguageIds(recipe);
         CheckIngredients(recipe);
 
         var i = new Recipe
@@ -111,15 +98,10 @@ public class RecipesService : IRecipesService
 
     public async Task<Recipe> UpdateAsync(Guid id, RecipeCreate recipe)
     {
-        if (!LangsExist(recipe.Properties.Cast<IEntityProperties>().ToHashSet()))
-            throw new ApiException(PropertyInvalidLang(nameof(Recipe)), 400);
-
+        CheckLanguageIds(recipe);
         CheckIngredients(recipe);
 
-        var i = await context.Recipes.FindAsync(id);
-
-        if (i == null)
-            throw new ApiException(NotFound(nameof(Recipe), id), 404);
+        var i = await FindById(context.Set<Recipe>(), id);
 
         foreach (var prop in recipe.Properties)
         {
@@ -130,6 +112,7 @@ public class RecipesService : IRecipesService
             {
                 iProp.Name = prop.Name;
                 iProp.Description = prop.Description;
+                iProp.Tags = prop.Tags;
             }
         }
         i.Image = recipe.Image;
@@ -141,6 +124,12 @@ public class RecipesService : IRecipesService
         await context.SaveChangesAsync();
 
         return i;
+    }
+
+    private void CheckLanguageIds(RecipeCreate r)
+    {
+        if (!LangsExist(r.Properties.Cast<IEntityProperties>()))
+            throw new ApiException(PropertyInvalidLang(nameof(Recipe)), 400);
     }
 
     private void CheckIngredients(RecipeCreate r)
@@ -155,7 +144,7 @@ public class RecipesService : IRecipesService
 public interface IRecipesService
 {
     public Task<RecipeResponse> GetAsync(Guid id);
-    public IEnumerable<SimpleEntity> GetNames(int _lang);
+    public IEnumerable<SimpleEntity> GetNames(int? _lang);
     public IEnumerable<SimpleEntity> GetByIngredients(Guid[] ids);
     public Task<string> InsertAsync(RecipeCreate recipe);
     public Task<Recipe> UpdateAsync(Guid id, RecipeCreate recipe);

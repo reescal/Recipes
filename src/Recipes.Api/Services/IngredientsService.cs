@@ -16,49 +16,28 @@ public class IngredientsService : IIngredientsService
 {
     private readonly DocsContext context;
 
-    public IngredientsService(IDbContextFactory<DocsContext> factory)
-    {
-        context = factory.CreateDbContext();
-    }
+    public IngredientsService(IDbContextFactory<DocsContext> factory) => context = factory.CreateDbContext();
 
-    public IEnumerable<Ingredient> Get()
+    public IEnumerable<Ingredient> Get() => context.Ingredients.AsNoTracking().AsEnumerable();
+
+    public async Task<Ingredient> GetAsync(Guid id) => await FindById(context.Set<Ingredient>(), id);
+
+    public IEnumerable<SimpleEntity> GetNames(int? _lang)
     {
         var result = context.Ingredients.AsNoTracking().AsEnumerable();
-        return result;
-    }
-
-    public async Task<Ingredient> GetAsync(Guid id)
-    {
-        var result = await context.Ingredients.FindAsync(id);
-
-        if (result == null)
-            throw new ApiException(NotFound(nameof(Ingredient), id), 404);
-
-        return result;
-    }
-
-    public IEnumerable<SimpleEntity> GetNames(int _lang)
-    {
-        if (!LangExists(_lang))
-            throw new ApiException(InvalidLang(_lang), 400);
-
-        var result = context.Ingredients.AsNoTracking().AsEnumerable();
-        var response = result.Where(x => x.Properties.Any(y => y.LangId == _lang))
-                            .Select(x => new SimpleEntity()
-                            {
-                                Id = x.Id,
-                                Properties = x.Properties
-                                                .Where(y => y.LangId == _lang)
-                                                .Cast<IEntityProperties>()
-                                                .ToHashSet()
-                            });
-        return response;
+        var response = result.Select(x => new SimpleEntity()
+                                                    {
+                                                        Id = x.Id,
+                                                        Properties = x.Properties
+                                                                            .Cast<IEntityProperties>()
+                                                                            .ToHashSet()
+                                                    });
+        return response.FilterLang(_lang);
     }
 
     public async Task<string> InsertAsync(IngredientCreate ingredient)
     {
-        if (!LangsExist(ingredient.Properties.Cast<IEntityProperties>().ToHashSet()))
-            throw new ApiException(PropertyInvalidLang(nameof(Ingredient)), 400);
+        CheckLanguageIds(ingredient);
 
         var i = new Ingredient
         {
@@ -66,7 +45,7 @@ public class IngredientsService : IIngredientsService
             Image = ingredient.Image,
             Properties = ingredient.Properties
         };
-        context.Add(i);
+        context.Ingredients.Add(i);
 
         await context.SaveChangesAsync();
 
@@ -75,13 +54,9 @@ public class IngredientsService : IIngredientsService
 
     public async Task<Ingredient> UpdateAsync(Guid id, IngredientCreate ingredient)
     {
-        if (!LangsExist(ingredient.Properties.Cast<IEntityProperties>().ToHashSet()))
-            throw new ApiException(PropertyInvalidLang(nameof(Ingredient)), 400);
+        CheckLanguageIds(ingredient);
 
-        var i = await context.Ingredients.FindAsync(id);
-
-        if (i == null)
-            throw new ApiException(NotFound(nameof(Ingredient), id), 404);
+        var i = await FindById(context.Set<Ingredient>(), id);
 
         foreach (var prop in ingredient.Properties)
         {
@@ -100,13 +75,19 @@ public class IngredientsService : IIngredientsService
 
         return i;
     }
+
+    private void CheckLanguageIds(IngredientCreate i)
+    {
+        if (!LangsExist(i.Properties.Cast<IEntityProperties>()))
+            throw new ApiException(PropertyInvalidLang(nameof(Ingredient)), 400);
+    }
 }
 
 public interface IIngredientsService
 {
     public IEnumerable<Ingredient> Get();
     public Task<Ingredient> GetAsync(Guid id);
-    public IEnumerable<SimpleEntity> GetNames(int _lang);
+    public IEnumerable<SimpleEntity> GetNames(int? _lang);
     public Task<string> InsertAsync(IngredientCreate ingredient);
     public Task<Ingredient> UpdateAsync(Guid id, IngredientCreate ingredient);
 }
