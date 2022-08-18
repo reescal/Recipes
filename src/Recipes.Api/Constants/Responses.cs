@@ -6,7 +6,6 @@ public static class Responses
 {
     public static string NotFound(string entity) => $"{entity} not found";
     public static string NotFound(string entity, Guid id) => $"{entity} with id {id} not found";
-    public static string PropertyInvalidLang(string entity) => $"{entity} property with {invalidLang.ToLowerInvariant()}";
     public static string InvalidLang(int id) => $"{invalidLang} {id}";
     private const string invalidLang = "Invalid language id";
 }
