@@ -83,6 +83,30 @@ public class Ingredients
         }
     }
 
+    [FunctionName(nameof(GetIngredientTypes))]
+    [OpenApiOperation(operationId: nameof(GetIngredientTypes), tags: new[] { _name })]
+    [OpenApiParameter(name: langId, In = ParameterLocation.Query, Required = false, Type = typeof(int), Description = "The **Lang Id** parameter")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: json, bodyType: typeof(IEnumerable<IngredientTypes>), Description = "The OK response")]
+    public IActionResult GetIngredientTypes(
+        [HttpTrigger(AuthorizationLevel.Anonymous, get, Route = _name + "/Types")] HttpRequest req)
+    {
+        try
+        {
+            int? lang = null;
+
+            if (req.Query.ContainsKey("langId"))
+                lang = int.Parse(req.Query["langId"]);
+
+            var ingredients = _ingredientService.GetTypes(lang);
+
+            return new OkObjectResult(ingredients);
+        }
+        catch (ApiException ex)
+        {
+            return ex.Exception;
+        }
+    }
+
     [FunctionName(nameof(CreateIngredient))]
     [OpenApiOperation(operationId: nameof(CreateIngredient), tags: new[] { _name })]
     [OpenApiRequestBody(contentType: json, bodyType: typeof(IngredientCreate), Description = nameof(Ingredient), Required = true)]

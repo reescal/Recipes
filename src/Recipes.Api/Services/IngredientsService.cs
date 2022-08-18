@@ -7,7 +7,6 @@ using System;
 using System.Linq;
 using Recipes.Api.Wrappers;
 using static Recipes.Api.Wrappers.Helpers;
-using static Recipes.Api.Constants.Responses;
 using Recipes.Shared.Interfaces;
 
 namespace Recipes.Api.Services;
@@ -35,9 +34,29 @@ public class IngredientsService : IIngredientsService
         return response.FilterLang(_lang);
     }
 
+    public HashSet<IngredientTypes> GetTypes(int? _lang)
+    {
+        var result = context.Ingredients.AsNoTracking().AsEnumerable().Select(x => x.Properties);
+        var response = new HashSet<IngredientTypes>()
+            {
+                new IngredientTypes()
+                {
+                    LangId = 1,
+                    Types = result.Select(x => x.First(y => y.LangId == 1).Type).ToHashSet()
+                },
+                new IngredientTypes()
+                {
+                    LangId = 2,
+                    Types = result.Select(x => x.First(y => y.LangId == 2).Type).ToHashSet()
+                }
+        };
+
+        return response.FilterLang(_lang, x => x.LangId == _lang).ToHashSet();
+    }
+
     public async Task<string> InsertAsync(IngredientCreate ingredient)
     {
-        CheckLanguageIds(ingredient);
+        LangsExist(ingredient.Properties.Cast<IEntityProperties>());
 
         var i = new Ingredient
         {
@@ -54,7 +73,7 @@ public class IngredientsService : IIngredientsService
 
     public async Task<Ingredient> UpdateAsync(Guid id, IngredientCreate ingredient)
     {
-        CheckLanguageIds(ingredient);
+        LangsExist(ingredient.Properties.Cast<IEntityProperties>());
 
         var i = await FindById(context.Set<Ingredient>(), id);
 
@@ -67,6 +86,7 @@ public class IngredientsService : IIngredientsService
             {
                 iProp.Name = prop.Name;
                 iProp.Description = prop.Description;
+                iProp.Type = prop.Type;
             }
         }
         i.Image = ingredient.Image;
@@ -75,12 +95,6 @@ public class IngredientsService : IIngredientsService
 
         return i;
     }
-
-    private void CheckLanguageIds(IngredientCreate i)
-    {
-        if (!LangsExist(i.Properties.Cast<IEntityProperties>()))
-            throw new ApiException(PropertyInvalidLang(nameof(Ingredient)), 400);
-    }
 }
 
 public interface IIngredientsService
@@ -88,6 +102,7 @@ public interface IIngredientsService
     public IEnumerable<Ingredient> Get();
     public Task<Ingredient> GetAsync(Guid id);
     public IEnumerable<SimpleEntity> GetNames(int? _lang);
+    public HashSet<IngredientTypes> GetTypes(int? _lang);
     public Task<string> InsertAsync(IngredientCreate ingredient);
     public Task<Ingredient> UpdateAsync(Guid id, IngredientCreate ingredient);
 }
