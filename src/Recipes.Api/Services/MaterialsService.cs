@@ -7,7 +7,6 @@ using System;
 using System.Linq;
 using Recipes.Api.Wrappers;
 using static Recipes.Api.Wrappers.Helpers;
-using static Recipes.Api.Constants.Responses;
 using Recipes.Shared.Interfaces;
 
 namespace Recipes.Api.Services;
@@ -38,7 +37,7 @@ public class MaterialsService : IMaterialsService
 
     public async Task<string> InsertAsync(MaterialCreate material)
     {
-        CheckLanguageIds(material);
+        LangsExist(material.Properties.Cast<IEntityProperties>());
 
         var i = new Material
         {
@@ -55,7 +54,7 @@ public class MaterialsService : IMaterialsService
 
     public async Task<Material> UpdateAsync(Guid id, MaterialCreate material)
     {
-        CheckLanguageIds(material);
+        LangsExist(material.Properties.Cast<IEntityProperties>());
 
         var i = await FindById(context.Set<Material>(), id);
 
@@ -75,12 +74,6 @@ public class MaterialsService : IMaterialsService
         await context.SaveChangesAsync();
 
         return i;
-    }
-
-    private void CheckLanguageIds(MaterialCreate m)
-    {
-        if (!LangsExist(m.Properties.Cast<IEntityProperties>()))
-            throw new ApiException(PropertyInvalidLang(nameof(Material)), 400);
     }
 }
 

@@ -76,7 +76,7 @@ public class RecipesService : IRecipesService
 
     public async Task<string> InsertAsync(RecipeCreate recipe)
     {
-        CheckLanguageIds(recipe);
+        LangsExist(recipe.Properties.Cast<IEntityProperties>());
         CheckIngredients(recipe);
 
         var i = new Recipe
@@ -98,7 +98,7 @@ public class RecipesService : IRecipesService
 
     public async Task<Recipe> UpdateAsync(Guid id, RecipeCreate recipe)
     {
-        CheckLanguageIds(recipe);
+        LangsExist(recipe.Properties.Cast<IEntityProperties>());
         CheckIngredients(recipe);
 
         var i = await FindById(context.Set<Recipe>(), id);
@@ -124,12 +124,6 @@ public class RecipesService : IRecipesService
         await context.SaveChangesAsync();
 
         return i;
-    }
-
-    private void CheckLanguageIds(RecipeCreate r)
-    {
-        if (!LangsExist(r.Properties.Cast<IEntityProperties>()))
-            throw new ApiException(PropertyInvalidLang(nameof(Recipe)), 400);
     }
 
     private void CheckIngredients(RecipeCreate r)
