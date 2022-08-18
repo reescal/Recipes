@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Recipes.Shared.Interfaces;
+﻿namespace Recipes.Shared.Interfaces;
 
 public interface IEntity
 {
