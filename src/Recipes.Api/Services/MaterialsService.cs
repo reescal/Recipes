@@ -7,7 +7,6 @@ using System;
 using System.Linq;
 using Recipes.Api.Wrappers;
 using static Recipes.Api.Wrappers.Helpers;
-using Recipes.Shared.Interfaces;
 
 namespace Recipes.Api.Services;
 

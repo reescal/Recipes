@@ -8,7 +8,6 @@ using System.Linq;
 using Recipes.Api.Wrappers;
 using static Recipes.Api.Wrappers.Helpers;
 using static Recipes.Api.Constants.Responses;
-using Recipes.Shared.Interfaces;
 
 namespace Recipes.Api.Services;
 
