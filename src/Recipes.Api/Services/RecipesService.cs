@@ -45,38 +45,24 @@ public class RecipesService : IRecipesService
         return response;
     }
 
-    public IEnumerable<SimpleEntity> GetByIngredients(Guid[] ids)
+    public IEnumerable<ComplexEntity> GetByIngredients(Guid[] ids)
     {
         var result = context.Recipes.AsNoTracking().AsEnumerable();
         var response = result.Where(x => x.Ingredients.Any(y => ids.Contains(y.IngredientId)))
-                    .Select(x => new SimpleEntity() 
-                    {
-                        Id = x.Id,
-                        Properties = x.Properties
-                                        .Cast<IEntityProperties>()
-                                        .ToHashSet()
-                    });
+                            .Select(x => (ComplexEntity)x);
         return response;
     }
 
-    public IEnumerable<SimpleEntity> GetNames(int? _lang)
+    public IEnumerable<ComplexEntity> GetNames(int? _lang)
     {
-        IEnumerable<SimpleEntity> response = default;
-
         var result = context.Recipes.AsNoTracking().AsEnumerable();
-        response = result.Select(x => new SimpleEntity()
-                                            {
-                                                Id = x.Id,
-                                                Properties = x.Properties
-                                                                    .Cast<IEntityProperties>()
-                                                                    .ToHashSet()
-                                            });
+        var response = result.Select(x => (ComplexEntity)x);
         return response.FilterLang(_lang);
     }
 
     public async Task<string> InsertAsync(RecipeCreate recipe)
     {
-        LangsExist(recipe.Properties.Cast<IEntityProperties>());
+        LangsExist(recipe.Properties);
         CheckIngredients(recipe);
 
         var i = new Recipe
@@ -98,7 +84,7 @@ public class RecipesService : IRecipesService
 
     public async Task<Recipe> UpdateAsync(Guid id, RecipeCreate recipe)
     {
-        LangsExist(recipe.Properties.Cast<IEntityProperties>());
+        LangsExist(recipe.Properties);
         CheckIngredients(recipe);
 
         var i = await FindById(context.Set<Recipe>(), id);
@@ -138,8 +124,8 @@ public class RecipesService : IRecipesService
 public interface IRecipesService
 {
     public Task<RecipeResponse> GetAsync(Guid id);
-    public IEnumerable<SimpleEntity> GetNames(int? _lang);
-    public IEnumerable<SimpleEntity> GetByIngredients(Guid[] ids);
+    public IEnumerable<ComplexEntity> GetNames(int? _lang);
+    public IEnumerable<ComplexEntity> GetByIngredients(Guid[] ids);
     public Task<string> InsertAsync(RecipeCreate recipe);
     public Task<Recipe> UpdateAsync(Guid id, RecipeCreate recipe);
 }

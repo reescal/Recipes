@@ -40,7 +40,7 @@ public static class Helpers
         return result;
     }
 
-    public static IEnumerable<T> FilterLang<T>(this IEnumerable<T> l, int? _lang) where T : SimpleEntity, new()
+    public static IEnumerable<T> FilterLang<T>(this IEnumerable<T> l, int? _lang) where T : ComplexEntity, new()
     {
         if (_lang == null)
             return l;

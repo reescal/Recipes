@@ -21,16 +21,10 @@ public class IngredientsService : IIngredientsService
 
     public async Task<Ingredient> GetAsync(Guid id) => await FindById(context.Set<Ingredient>(), id);
 
-    public IEnumerable<SimpleEntity> GetNames(int? _lang)
+    public IEnumerable<ComplexEntity> GetNames(int? _lang)
     {
         var result = context.Ingredients.AsNoTracking().AsEnumerable();
-        var response = result.Select(x => new SimpleEntity()
-                                                    {
-                                                        Id = x.Id,
-                                                        Properties = x.Properties
-                                                                            .Cast<IEntityProperties>()
-                                                                            .ToHashSet()
-                                                    });
+        var response = result.Select(x => (ComplexEntity)x);
         return response.FilterLang(_lang);
     }
 
@@ -56,7 +50,7 @@ public class IngredientsService : IIngredientsService
 
     public async Task<string> InsertAsync(IngredientCreate ingredient)
     {
-        LangsExist(ingredient.Properties.Cast<IEntityProperties>());
+        LangsExist(ingredient.Properties);
 
         var i = new Ingredient
         {
@@ -73,7 +67,7 @@ public class IngredientsService : IIngredientsService
 
     public async Task<Ingredient> UpdateAsync(Guid id, IngredientCreate ingredient)
     {
-        LangsExist(ingredient.Properties.Cast<IEntityProperties>());
+        LangsExist(ingredient.Properties);
 
         var i = await FindById(context.Set<Ingredient>(), id);
 
@@ -101,7 +95,7 @@ public interface IIngredientsService
 {
     public IEnumerable<Ingredient> Get();
     public Task<Ingredient> GetAsync(Guid id);
-    public IEnumerable<SimpleEntity> GetNames(int? _lang);
+    public IEnumerable<ComplexEntity> GetNames(int? _lang);
     public HashSet<IngredientTypes> GetTypes(int? _lang);
     public Task<string> InsertAsync(IngredientCreate ingredient);
     public Task<Ingredient> UpdateAsync(Guid id, IngredientCreate ingredient);

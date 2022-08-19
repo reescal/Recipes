@@ -21,23 +21,16 @@ public class MaterialsService : IMaterialsService
 
     public async Task<Material> GetAsync(Guid id) => await FindById(context.Set<Material>(), id);
 
-    public IEnumerable<SimpleEntity> GetNames(int? _lang)
+    public IEnumerable<ComplexEntity> GetNames(int? _lang)
     {
         var result = context.Materials.AsNoTracking().AsEnumerable();
-        var response = result.Select(x => new SimpleEntity()
-                                            {
-                                                Id = x.Id,
-                                                Properties = x.Properties
-                                                                    .Cast<IEntityProperties>()
-                                                                    .ToHashSet()
-                                            });
-
+        var response = result.Select(x => (ComplexEntity)x);
         return response.FilterLang(_lang);
     }
 
     public async Task<string> InsertAsync(MaterialCreate material)
     {
-        LangsExist(material.Properties.Cast<IEntityProperties>());
+        LangsExist(material.Properties);
 
         var i = new Material
         {
@@ -54,7 +47,7 @@ public class MaterialsService : IMaterialsService
 
     public async Task<Material> UpdateAsync(Guid id, MaterialCreate material)
     {
-        LangsExist(material.Properties.Cast<IEntityProperties>());
+        LangsExist(material.Properties);
 
         var i = await FindById(context.Set<Material>(), id);
 
@@ -81,7 +74,7 @@ public interface IMaterialsService
 {
     public IEnumerable<Material> Get();
     public Task<Material> GetAsync(Guid id);
-    public IEnumerable<SimpleEntity> GetNames(int? _lang);
+    public IEnumerable<ComplexEntity> GetNames(int? _lang);
     public Task<string> InsertAsync(MaterialCreate ingredient);
     public Task<Material> UpdateAsync(Guid id, MaterialCreate ingredient);
 }
