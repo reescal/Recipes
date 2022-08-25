@@ -1,0 +1,40 @@
+﻿@typeparam TItem
+@inject NavigationManager NavigationManager
+
+<AutoComplete TOption="string" OnInput="OnInput" OnSelectionChange="OnSelectionChange">
+    <OverlayTemplate>
+        @foreach (var group in filteredEntities)
+        {
+            <AutoCompleteOptGroup Label="@group.Key">
+                <ChildContent>
+                    @foreach (var option in group)
+                    {
+                        <AutoCompleteOption Value="@option" Label="@option.Properties.Name" />
+                    }
+                </ChildContent>
+            </AutoCompleteOptGroup>
+        }
+    </OverlayTemplate>
+</AutoComplete>
+
+<Button Type="@ButtonType.Default" Icon="@IconType.Outline.Plus" OnClick="async () => await CreateAction.InvokeAsync()" />
+
+@foreach(var group in filteredEntities)
+{
+    <Divider Orientation="left" Style="font-weight:bold">@group.Key</Divider>
+    <AntList Grid="grid" DataSource="@group">
+        <ListItem>
+            <Card Size="small" Hoverable Bordered>
+                <Cover>
+                    <img alt="example" src="@context.Image" @onclick="@(() => NavigateTo(context.Id))" />
+                </Cover>
+                <ChildContent>
+                    <CardMeta Title="@context.Properties.Name" />
+                </ChildContent>
+            </Card>
+        </ListItem>
+    </AntList>
+}
+
+@code {
+}

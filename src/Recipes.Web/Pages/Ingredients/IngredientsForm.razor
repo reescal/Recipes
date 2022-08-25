@@ -1,0 +1,121 @@
+﻿@using Recipes.Web.Services
+@inject IIngredientsService _ingredientsService
+
+@if(formState == FormState.None)
+{
+    <Form Model="@ingredient" @ref="@_form" Layout="@FormLayout.Vertical">
+        <Validator>
+            <FluentValidationValidator />
+        </Validator>
+        <ChildContent>
+            <FormItem Label="Image">
+                <Input @bind-Value="context.Image" />
+            </FormItem>
+            <Divider Orientation="left" Style="font-weight:bold">English</Divider>
+            <FormItem>
+                <Form @ref="@_propertiesForm" Model="@properties" Context="propContext" Layout="@FormLayout.Vertical">
+                    <Validator>
+                        <FluentValidationValidator />
+                    </Validator>
+                    <ChildContent>
+                        <FormItem Label="Name">
+                            <Input @bind-Value="@propContext.Name" />
+                        </FormItem>
+                        <FormItem Label="Description">
+                            <TextArea @bind-Value="@propContext.Description" />
+                        </FormItem>
+                        <FormItem Label="Type">
+                            <AutoComplete @bind-Value="@propContext.Type" Options="@IngredientTypes(1)" />
+                        </FormItem>
+                    </ChildContent>
+                </Form>
+            </FormItem>
+            <Divider Orientation="left" Style="font-weight:bold">Spanish</Divider>
+            <FormItem>
+                <Form @ref="@_propertiesSpForm" Model="@propertiesSp" Context="propContext" Layout="@FormLayout.Vertical">
+                    <Validator>
+                        <FluentValidationValidator />
+                    </Validator>
+                    <ChildContent>
+                        <FormItem Label="Nombre">
+                            <Input @bind-Value="@propContext.Name" />
+                        </FormItem>
+                        <FormItem Label="Description">
+                            <TextArea @bind-Value="@propContext.Description" />
+                        </FormItem>
+                        <FormItem Label="Tipo">
+                            <AutoComplete @bind-Value="@propContext.Type" Options="@IngredientTypes(2)" />
+                        </FormItem>
+                    </ChildContent>
+                </Form>
+            </FormItem>
+        </ChildContent>
+    </Form>
+}
+else
+{
+    <Result Status="@formState.ToString().ToLower()" Title="@formState.ToString()" SubTitle="@response">
+        <Extra>
+            @if(formState == FormState.Error)
+            {
+                <Button Type="primary" OnClick="() => formState = FormState.None">Try Again</Button>
+            }
+        </Extra>
+    </Result>
+}
+
+@code {
+    [CascadingParameter]
+    protected Lang? Lang { get; set; }
+    [CascadingParameter]
+    protected Guid? Id { get; set; }
+
+    [Parameter]
+    public ModalAction State { get; set; }
+    [Parameter]
+    public IngredientCreate SelectedIngredient { get; set; }
+
+    private HashSet<IngredientTypes> ingredientTypes { get; set; }
+    private HashSet<string> IngredientTypes(int lang) => ingredientTypes?.Single(x => x.LangId == lang)?.Types ?? Enumerable.Empty<string>().ToHashSet();
+
+    private IngredientCreate ingredient => State == ModalAction.Update ? SelectedIngredient : i;
+    private IngredientProperties properties => State == ModalAction.Update ? SelectedIngredient.Properties.Single(x => x.LangId == 1) : p;
+    private IngredientProperties propertiesSp => State == ModalAction.Update ? SelectedIngredient.Properties.Single(x => x.LangId == 2) : pSp;
+
+    private IngredientCreate i = new IngredientCreate() { Properties = new HashSet<IngredientProperties>() };
+    private IngredientProperties p = new IngredientProperties() { LangId = 1 };
+    private IngredientProperties pSp = new IngredientProperties() { LangId = 2 };
+
+    private Form<IngredientCreate> _form;
+    private Form<IngredientProperties> _propertiesForm;
+    private Form<IngredientProperties> _propertiesSpForm;
+    private FormState formState = FormState.None;
+    private string response = string.Empty;
+
+    protected override async Task OnInitializedAsync() => ingredientTypes = await _ingredientsService.GetTypes();
+
+    public async Task<bool> Submit()
+    {
+        var validated1 = _propertiesForm.Validate();
+        var validated2 = _propertiesSpForm.Validate();
+        var validated = _form.Validate();
+
+        if (!validated || !validated1 || !validated2)
+            return false;
+
+        ingredient.Properties.Add(properties);
+        ingredient.Properties.Add(propertiesSp);
+
+        if (State == ModalAction.Create)
+            response = await _ingredientsService.Add(ingredient);
+        else if (State == ModalAction.Update)
+            response = await _ingredientsService.Update((Guid)Id, ingredient);
+
+        formState = Guid.TryParse(response, out Guid id) ? FormState.Success : FormState.Error;
+
+        if (formState == FormState.Success)
+            ingredientTypes = await _ingredientsService.GetTypes();
+
+        return formState == FormState.Success;
+    }
+}

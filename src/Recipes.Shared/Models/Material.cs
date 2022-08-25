@@ -1,8 +1,6 @@
-﻿using Recipes.Api.Interfaces;
-using System;
-using System.Collections.Generic;
+﻿using Recipes.Shared.Interfaces;
 
-namespace Recipes.Api.Models;
+namespace Recipes.Shared.Models;
 
 public class Material : MaterialCreate, IEntity
 {
@@ -20,4 +18,5 @@ public class MaterialProperties : IEntityProperties
     public int LangId { get; set; }
     public string Name { get; set; }
     public string Description { get; set; }
+    public string Type { get; set; }
 }

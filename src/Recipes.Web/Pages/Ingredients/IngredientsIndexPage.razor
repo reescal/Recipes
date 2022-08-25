@@ -1,26 +1,38 @@
 ﻿@page "/Ingredients"
+@page "/Ingredients/{Id:guid}"
+@using Recipes.Web.Services
+@inject IIngredientsService _ingredientsService
 
-<Search @bind-Value="@_searchValue" OnPressEnter="OnEnter" OnSearch="OnSearch" Loading="@_loading" />
-@Lang.ToString()
+@if (ingredients != null)
+{
+    <FilterableCardGrid Entities="@entities" TItem="ComplexEntity" CreateAction="() => ingredientsModal?.Show()" Route="Ingredients" />
+    <CascadingValue Value="@Id">
+        <IngredientsModal SelectedIngredient="@SelectedIngredient" Refresh="Refresh" @ref="ingredientsModal" Route="Ingredients" />
+    </CascadingValue>
+}
 
 @code {
-    private string _searchValue { get; set; } = string.Empty;
-    private bool _loading;
+    private IEnumerable<Ingredient> ingredients { get; set; } = new List<Ingredient>();
 
-    [CascadingParameter]
-    protected Lang Lang { get; set; }
+    private IEnumerable<ComplexEntity> entities => ingredients.Select(x => (ComplexEntity)x);
 
-    public async Task OnSearch()
+    private Ingredient? SelectedIngredient = default;
+
+    private IngredientsModal? ingredientsModal;
+
+    [Parameter]
+    public Guid? Id { get; set; }
+
+    protected override async Task OnInitializedAsync() => ingredients = await _ingredientsService.Get();
+
+    protected override void OnParametersSet()
     {
-        _loading = true;
-        await Task.Delay(3000);
-        _loading = false;
+        if (Id == null)
+            return;
+
+        SelectedIngredient = ingredients.FirstOrDefault(x => x.Id == Id);
+        ingredientsModal?.Show();
     }
 
-    private async Task OnEnter(KeyboardEventArgs e)
-    {
-        _loading = true;
-        await Task.Delay(3000);
-        _loading = false;
-    }
+    private async Task Refresh() => ingredients = await _ingredientsService.Get();
 }

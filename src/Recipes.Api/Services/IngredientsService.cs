@@ -1,5 +1,5 @@
 ﻿using Recipes.Api.Entities;
-using Recipes.Api.Models;
+using Recipes.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -7,8 +7,6 @@ using System;
 using System.Linq;
 using Recipes.Api.Wrappers;
 using static Recipes.Api.Wrappers.Helpers;
-using static Recipes.Api.Constants.Responses;
-using Recipes.Api.Interfaces;
 
 namespace Recipes.Api.Services;
 
@@ -16,49 +14,42 @@ public class IngredientsService : IIngredientsService
 {
     private readonly DocsContext context;
 
-    public IngredientsService(IDbContextFactory<DocsContext> factory)
-    {
-        context = factory.CreateDbContext();
-    }
+    public IngredientsService(IDbContextFactory<DocsContext> factory) => context = factory.CreateDbContext();
 
-    public IEnumerable<Ingredient> Get()
+    public IEnumerable<Ingredient> Get() => context.Ingredients.AsNoTracking().AsEnumerable();
+
+    public async Task<Ingredient> GetAsync(Guid id) => await FindById(context.Set<Ingredient>(), id);
+
+    public IEnumerable<ComplexEntity> GetNames(int? _lang)
     {
         var result = context.Ingredients.AsNoTracking().AsEnumerable();
-        return result;
+        var response = result.Select(x => (ComplexEntity)x);
+        return response.FilterLang(_lang);
     }
 
-    public async Task<Ingredient> GetAsync(Guid id)
+    public HashSet<IngredientTypes> GetTypes(int? _lang)
     {
-        var result = await context.Ingredients.FindAsync(id);
+        var result = context.Ingredients.AsNoTracking().AsEnumerable().Select(x => x.Properties);
+        var response = new HashSet<IngredientTypes>()
+            {
+                new IngredientTypes()
+                {
+                    LangId = 1,
+                    Types = result.Select(x => x.First(y => y.LangId == 1).Type).ToHashSet()
+                },
+                new IngredientTypes()
+                {
+                    LangId = 2,
+                    Types = result.Select(x => x.First(y => y.LangId == 2).Type).ToHashSet()
+                }
+        };
 
-        if (result == null)
-            throw new ApiException(NotFound(nameof(Ingredient), id), 404);
-
-        return result;
-    }
-
-    public IEnumerable<SimpleEntity> GetNames(int _lang)
-    {
-        if (!LangExists(_lang))
-            throw new ApiException(InvalidLang(_lang), 400);
-
-        var result = context.Ingredients.AsNoTracking().AsEnumerable();
-        var response = result.Where(x => x.Properties.Any(y => y.LangId == _lang))
-                            .Select(x => new SimpleEntity()
-                            {
-                                Id = x.Id,
-                                Properties = x.Properties
-                                                .Where(y => y.LangId == _lang)
-                                                .Cast<IEntityProperties>()
-                                                .ToHashSet()
-                            });
-        return response;
+        return response.FilterLang(_lang, x => x.LangId == _lang).ToHashSet();
     }
 
     public async Task<string> InsertAsync(IngredientCreate ingredient)
     {
-        if (!LangsExist(ingredient.Properties.Cast<IEntityProperties>().ToHashSet()))
-            throw new ApiException(PropertyInvalidLang(nameof(Ingredient)), 400);
+        LangsExist(ingredient.Properties);
 
         var i = new Ingredient
         {
@@ -66,7 +57,7 @@ public class IngredientsService : IIngredientsService
             Image = ingredient.Image,
             Properties = ingredient.Properties
         };
-        context.Add(i);
+        context.Ingredients.Add(i);
 
         await context.SaveChangesAsync();
 
@@ -75,13 +66,9 @@ public class IngredientsService : IIngredientsService
 
     public async Task<Ingredient> UpdateAsync(Guid id, IngredientCreate ingredient)
     {
-        if (!LangsExist(ingredient.Properties.Cast<IEntityProperties>().ToHashSet()))
-            throw new ApiException(PropertyInvalidLang(nameof(Ingredient)), 400);
+        LangsExist(ingredient.Properties);
 
-        var i = await context.Ingredients.FindAsync(id);
-
-        if (i == null)
-            throw new ApiException(NotFound(nameof(Ingredient), id), 404);
+        var i = await FindById(context.Set<Ingredient>(), id);
 
         foreach (var prop in ingredient.Properties)
         {
@@ -92,6 +79,7 @@ public class IngredientsService : IIngredientsService
             {
                 iProp.Name = prop.Name;
                 iProp.Description = prop.Description;
+                iProp.Type = prop.Type;
             }
         }
         i.Image = ingredient.Image;
@@ -106,7 +94,8 @@ public interface IIngredientsService
 {
     public IEnumerable<Ingredient> Get();
     public Task<Ingredient> GetAsync(Guid id);
-    public IEnumerable<SimpleEntity> GetNames(int _lang);
+    public IEnumerable<ComplexEntity> GetNames(int? _lang);
+    public HashSet<IngredientTypes> GetTypes(int? _lang);
     public Task<string> InsertAsync(IngredientCreate ingredient);
     public Task<Ingredient> UpdateAsync(Guid id, IngredientCreate ingredient);
 }

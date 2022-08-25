@@ -1,4 +1,4 @@
-﻿using Recipes.Api.Models;
+﻿using Recipes.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Recipes.Api.Entities
@@ -23,8 +23,7 @@ namespace Recipes.Api.Entities
                 .OwnsMany(x => x.Properties);
             modelBuilder.Entity<Recipe>()
                 .HasPartitionKey(x => x.Id)
-                .OwnsMany(x => x.Properties)
-                .OwnsMany(x => x.Tags);
+                .OwnsMany(x => x.Properties);
             modelBuilder.Entity<Recipe>()
                 .OwnsMany(x => x.Ingredients);
         }

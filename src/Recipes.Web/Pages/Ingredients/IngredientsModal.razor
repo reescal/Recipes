@@ -1,0 +1,93 @@
+﻿@inject NavigationManager NavigationManager
+
+<Modal Visible="@visible" OnOk="@HandleOk" OnCancel="@HandleCancel" Closable=false>
+    @if(state == ModalAction.Create || state == ModalAction.Update)
+    {
+        <IngredientsForm State="@state" SelectedIngredient="@SelectedIngredient" @ref="form"/>
+    }
+    else if (state == ModalAction.Read)
+    {
+        <Card Style="width:300px;" Bordered >
+            <ActionTemplate>
+                <CardAction>
+                    <Icon Type="edit" OnClick="@(() => state = ModalAction.Update)" />
+                </CardAction>
+            </ActionTemplate>
+            <Cover>
+                <img alt="example" src="@SelectedIngredient.Image" />
+            </Cover>
+            <ChildContent>
+                <CardMeta Title="@SelectedIngredient.Properties.Single(x => x.LangId == (int)Lang).Name">
+                    <DescriptionTemplate>
+                        <Title>Description</Title>
+                        @SelectedIngredient.Properties.Single(x => x.LangId == (int)Lang).Description
+                        <Title>Type</Title>
+                        @SelectedIngredient.Properties.Single(x => x.LangId == (int)Lang).Type
+                    </DescriptionTemplate>
+                </CardMeta>
+            </ChildContent>
+        </Card>
+    }
+    else if (state == ModalAction.Error)
+    {
+        <Result Status="404" Title="404" SubTitle="Sorry, the ingredient you are looking for does not exist." />
+    }
+</Modal>
+
+@code {
+    [CascadingParameter]
+    protected Guid? Id { get; set; }
+    [CascadingParameter]
+    protected Lang? Lang { get; set; }
+
+    [Parameter]
+    public IngredientCreate SelectedIngredient { get; set; }
+    [Parameter]
+    public EventCallback Refresh { get; set; }
+    [Parameter]
+    public string Route { get; set; }
+
+    private IngredientsForm? form;
+
+    private bool _visible;
+    private bool visible
+    {
+        get => _visible;
+        set
+        {
+            _visible = value;
+            StateHasChanged();
+        }
+    }
+    private ModalAction state;
+
+    public void Show() => visible = true;
+
+    private async Task HandleOk(MouseEventArgs e)
+    {
+        if (state != ModalAction.Create && state != ModalAction.Update)
+        {
+            var result = await form?.Submit();
+            if (result)
+            {
+                StateHasChanged();
+                await Task.Delay(1000);
+                await Refresh.InvokeAsync();
+            }
+        }
+
+        HandleCancel(new MouseEventArgs());
+    }
+
+    private void HandleCancel(MouseEventArgs e)
+    {
+        visible = false;
+        NavigationManager.NavigateTo(Route);
+    }
+
+    protected override void OnParametersSet() => state = Id switch
+                                                    {
+                                                        null => ModalAction.Create,
+                                                        Guid => SelectedIngredient != null ? ModalAction.Read : ModalAction.Error,
+                                                    };
+}
