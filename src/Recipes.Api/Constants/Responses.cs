@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Recipes.Shared.Enums;
+using System;
 
 namespace Recipes.Api.Constants;
 
@@ -6,7 +7,7 @@ public static class Responses
 {
     public static string NotFound(string entity) => $"{entity} not found";
     public static string NotFound(string entity, Guid id) => $"{entity} with id {id} not found";
-    public static string InvalidLang(int id) => $"{invalidLang} {id}";
+    public static string InvalidLang(string id) => $"{invalidLang} {id}";
     private const string invalidLang = "Invalid language id";
 }
 
