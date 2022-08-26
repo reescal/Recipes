@@ -1,4 +1,5 @@
-﻿using Recipes.Shared.Interfaces;
+﻿using Recipes.Shared.Enums;
+using Recipes.Shared.Interfaces;
 
 namespace Recipes.Shared.Models;
 
@@ -8,7 +9,7 @@ public class ComplexEntity : IComplexEntity
     public string Image { get; set; }
     public HashSet<IEntityProperties> Properties { get; set; }
 
-    public SimpleEntity ToSimpleEntity(int lang)
+    public SimpleEntity ToSimpleEntity(Lang lang)
     {
         return new SimpleEntity()
         {
@@ -55,7 +56,7 @@ public class SimpleEntity
     public string Image { get; set; }
     public IEntityProperties Properties { get; set; }
 
-    public static SimpleEntity FromIngredient(Ingredient i, int lang)
+    public static SimpleEntity FromIngredient(Ingredient i, Lang lang)
     {
         return new SimpleEntity()
         {

@@ -16,6 +16,8 @@ using static Recipes.Api.Constants.Constants;
 using static Recipes.Api.Constants.ContentTypes;
 using static Recipes.Api.Constants.HttpMethods;
 using static Recipes.Api.Wrappers.Helpers;
+using FluentValidation;
+using Recipes.Shared.Enums;
 
 namespace Recipes.Api;
 
@@ -24,11 +26,13 @@ public class Ingredients
     private const string _name = nameof(Ingredients);
     private readonly ILogger<Ingredients> _logger;
     private readonly IIngredientsService _ingredientService;
+    private IValidator<IngredientCreate> _validator;
 
-    public Ingredients(ILogger<Ingredients> log, IIngredientsService ingredientService)
+    public Ingredients(ILogger<Ingredients> log, IIngredientsService ingredientService, IValidator<IngredientCreate> validator)
     {
         _logger = log;
         _ingredientService = ingredientService;
+        _validator = validator;
     }
 
     [FunctionName(nameof(GetIngredients))]
@@ -61,17 +65,20 @@ public class Ingredients
 
     [FunctionName(nameof(GetIngredientNames))]
     [OpenApiOperation(operationId: nameof(GetIngredientNames), tags: new[] { _name })]
-    [OpenApiParameter(name: langId, In = ParameterLocation.Query, Required = false, Type = typeof(int), Description = "The **Lang Id** parameter")]
+    [OpenApiParameter(name: langId, In = ParameterLocation.Query, Required = false, Type = typeof(Lang), Description = "The **Lang Id** parameter")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: json, bodyType: typeof(IEnumerable<ComplexEntity>), Description = "The OK response")]
     public IActionResult GetIngredientNames(
         [HttpTrigger(AuthorizationLevel.Anonymous, get, Route = _name + "/Names")] HttpRequest req)
     {
         try
         {
-            int? lang = null;
+            Lang? lang = null;
 
-            if (req.Query.ContainsKey("langId"))
-                lang = int.Parse(req.Query["langId"]);
+            if (req.Query.ContainsKey(langId))
+            {
+                LangExists(req.Query[langId]);
+                lang = Enum.Parse<Lang>(req.Query[langId]);
+            }
 
             var ingredients = _ingredientService.GetNames(lang);
 
@@ -92,10 +99,13 @@ public class Ingredients
     {
         try
         {
-            int? lang = null;
+            Lang? lang = null;
 
-            if (req.Query.ContainsKey("langId"))
-                lang = int.Parse(req.Query["langId"]);
+            if (req.Query.ContainsKey(langId))
+            {
+                LangExists(req.Query[langId]);
+                lang = Enum.Parse<Lang>(req.Query[langId]);
+            }
 
             var ingredients = _ingredientService.GetTypes(lang);
 
@@ -114,18 +124,14 @@ public class Ingredients
     public async Task<IActionResult> CreateIngredient(
         [HttpTrigger(AuthorizationLevel.Anonymous, post, Route = _name)] HttpRequest req)
     {
-        try
-        {
-            var input = await DeserializeAsync<IngredientCreate>(req);
+        var input = await DeserializeAsync<IngredientCreate>(req);
 
-            var id = await _ingredientService.InsertAsync(input);
+        var result = await _validator.ValidateAsync(input);
+        if (!result.IsValid)
+            return new OkObjectResult(result.Errors);
 
-            return new OkObjectResult(id);
-        }
-        catch(ApiException ex)
-        {
-            return ex.Exception;
-        }
+        var id = await _ingredientService.InsertAsync(input);
+        return new OkObjectResult(id);
     }
 
     [FunctionName(nameof(UpdateIngredient))]
@@ -136,12 +142,15 @@ public class Ingredients
     public async Task<IActionResult> UpdateIngredient(
         [HttpTrigger(AuthorizationLevel.Anonymous, put, Route = _name + "/{id:Guid}")] HttpRequest req, Guid id)
     {
+        var input = await DeserializeAsync<IngredientCreate>(req);
+
+        var result = await _validator.ValidateAsync(input);
+        if (!result.IsValid)
+            return new OkObjectResult(result.Errors);
+
         try
         {
-            var input = await DeserializeAsync<IngredientCreate>(req);
-
             var obj = await _ingredientService.UpdateAsync(id, input);
-
             return new OkObjectResult(obj);
         }
         catch (ApiException ex)

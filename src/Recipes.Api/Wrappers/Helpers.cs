@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
-using Recipes.Shared.Interfaces;
 using Recipes.Shared.Enums;
 using System;
 using System.Collections.Generic;
@@ -22,30 +21,22 @@ public static class Helpers
         return input;
     }
 
-    public static void LangExists(int langId)
+    public static void LangExists(string langId)
     {
         if (!Enum.IsDefined(typeof(Lang), langId))
-            throw new ApiException(InvalidLang((int)langId), 400);
+            throw new ApiException(InvalidLang(langId), 400);
     }
-
-    public static void LangsExist(IEnumerable<IEntityProperties> properties) => properties.Select(x => x.LangId).ToList().ForEach(x => LangExists(x));
 
     public static async Task<T> FindById<T>(DbSet<T> ctx, Guid id) where T : class
     {
         var result = await ctx.FindAsync(id);
-
-        if (result == null)
-            throw new ApiException(NotFound(nameof(T), id), 404);
-
-        return result;
+        return result ?? throw new ApiException(NotFound(nameof(T), id), 404);
     }
 
-    public static IEnumerable<T> FilterLang<T>(this IEnumerable<T> l, int? _lang) where T : ComplexEntity, new()
+    public static IEnumerable<T> FilterLang<T>(this IEnumerable<T> l, Lang? _lang) where T : ComplexEntity, new()
     {
         if (_lang == null)
             return l;
-
-        LangExists((int)_lang);
 
         l = l.Where(x => x.Properties.Any(y => y.LangId == _lang))
                             .Select(x => new T()
@@ -58,14 +49,5 @@ public static class Helpers
         return l;
     }
 
-    public static IEnumerable<T> FilterLang<T>(this IEnumerable<T> l, int? _lang, Func<T, bool> filter) where T : class
-    {
-        if (_lang == null)
-            return l;
-
-        LangExists((int)_lang);
-
-        l = l.Where(filter);
-        return l;
-    }
+    public static IEnumerable<T> FilterLang<T>(this IEnumerable<T> l, Lang? _lang, Func<T, bool> filter) where T : class => _lang == null ? l : l.Where(filter);
 }

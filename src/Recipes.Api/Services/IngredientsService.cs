@@ -7,6 +7,7 @@ using System;
 using System.Linq;
 using Recipes.Api.Wrappers;
 using static Recipes.Api.Wrappers.Helpers;
+using Recipes.Shared.Enums;
 
 namespace Recipes.Api.Services;
 
@@ -20,27 +21,27 @@ public class IngredientsService : IIngredientsService
 
     public async Task<Ingredient> GetAsync(Guid id) => await FindById(context.Set<Ingredient>(), id);
 
-    public IEnumerable<ComplexEntity> GetNames(int? _lang)
+    public IEnumerable<ComplexEntity> GetNames(Lang? _lang)
     {
         var result = context.Ingredients.AsNoTracking().AsEnumerable();
         var response = result.Select(x => (ComplexEntity)x);
         return response.FilterLang(_lang);
     }
 
-    public HashSet<IngredientTypes> GetTypes(int? _lang)
+    public HashSet<IngredientTypes> GetTypes(Lang? _lang)
     {
         var result = context.Ingredients.AsNoTracking().AsEnumerable().Select(x => x.Properties);
         var response = new HashSet<IngredientTypes>()
             {
                 new IngredientTypes()
                 {
-                    LangId = 1,
-                    Types = result.Select(x => x.First(y => y.LangId == 1).Type).ToHashSet()
+                    LangId = Lang.English,
+                    Types = result.Select(x => x.First(y => y.LangId == Lang.English).Type).ToHashSet()
                 },
                 new IngredientTypes()
                 {
-                    LangId = 2,
-                    Types = result.Select(x => x.First(y => y.LangId == 2).Type).ToHashSet()
+                    LangId = Lang.Spanish,
+                    Types = result.Select(x => x.First(y => y.LangId == Lang.Spanish).Type).ToHashSet()
                 }
         };
 
@@ -49,8 +50,6 @@ public class IngredientsService : IIngredientsService
 
     public async Task<string> InsertAsync(IngredientCreate ingredient)
     {
-        LangsExist(ingredient.Properties);
-
         var i = new Ingredient
         {
             Id = Guid.NewGuid(),
@@ -66,8 +65,6 @@ public class IngredientsService : IIngredientsService
 
     public async Task<Ingredient> UpdateAsync(Guid id, IngredientCreate ingredient)
     {
-        LangsExist(ingredient.Properties);
-
         var i = await FindById(context.Set<Ingredient>(), id);
 
         foreach (var prop in ingredient.Properties)
@@ -94,8 +91,8 @@ public interface IIngredientsService
 {
     public IEnumerable<Ingredient> Get();
     public Task<Ingredient> GetAsync(Guid id);
-    public IEnumerable<ComplexEntity> GetNames(int? _lang);
-    public HashSet<IngredientTypes> GetTypes(int? _lang);
+    public IEnumerable<ComplexEntity> GetNames(Lang? _lang);
+    public HashSet<IngredientTypes> GetTypes(Lang? _lang);
     public Task<string> InsertAsync(IngredientCreate ingredient);
     public Task<Ingredient> UpdateAsync(Guid id, IngredientCreate ingredient);
 }
