@@ -16,6 +16,8 @@ using static Recipes.Api.Constants.Constants;
 using static Recipes.Api.Constants.ContentTypes;
 using static Recipes.Api.Constants.HttpMethods;
 using static Recipes.Api.Wrappers.Helpers;
+using Recipes.Shared.Enums;
+using FluentValidation;
 
 namespace Recipes.Api;
 
@@ -24,11 +26,13 @@ public class Materials
     private const string _name = nameof(Materials);
     private readonly ILogger<Materials> _logger;
     private readonly IMaterialsService _materialService;
+    private readonly IValidator<MaterialCreate> _validator;
 
-    public Materials(ILogger<Materials> log, IMaterialsService materialService)
+    public Materials(ILogger<Materials> log, IMaterialsService materialService, IValidator<MaterialCreate> validator)
     {
         _logger = log;
         _materialService = materialService;
+        _validator = validator;
     }
 
     [FunctionName(nameof(GetMaterials))]
@@ -68,10 +72,13 @@ public class Materials
     {
         try
         {
-            int? lang = null;
+            Lang? lang = null;
 
-            if (req.Query.ContainsKey("langId"))
-                lang = int.Parse(req.Query["langId"]);
+            if (req.Query.ContainsKey(langId))
+            {
+                LangExists(req.Query[langId]);
+                lang = Enum.Parse<Lang>(req.Query[langId]);
+            }
 
             var ingredients = _materialService.GetNames(lang);
 
@@ -90,18 +97,14 @@ public class Materials
     public async Task<IActionResult> CreateMaterial(
         [HttpTrigger(AuthorizationLevel.Anonymous, post, Route = _name)] HttpRequest req)
     {
-        try
-        {
-            var input = await DeserializeAsync<MaterialCreate>(req);
+        var input = await DeserializeAsync<MaterialCreate>(req);
 
-            var id = await _materialService.InsertAsync(input);
+        var result = await _validator.ValidateAsync(input);
+        if (!result.IsValid)
+            return new OkObjectResult(result.Errors);
 
-            return new OkObjectResult(id);
-        }
-        catch(ApiException ex)
-        {
-            return ex.Exception;
-        }
+        var id = await _materialService.InsertAsync(input);
+        return new OkObjectResult(id);
     }
 
     [FunctionName(nameof(UpdateMaterial))]
@@ -112,12 +115,15 @@ public class Materials
     public async Task<IActionResult> UpdateMaterial(
         [HttpTrigger(AuthorizationLevel.Anonymous, put, Route = _name + "/{id:Guid}")] HttpRequest req, Guid id)
     {
+        var input = await DeserializeAsync<MaterialCreate>(req);
+
+        var result = await _validator.ValidateAsync(input);
+        if (!result.IsValid)
+            return new OkObjectResult(result.Errors);
+
         try
         {
-            var input = await DeserializeAsync<MaterialCreate>(req);
-
             var obj = await _materialService.UpdateAsync(id, input);
-
             return new OkObjectResult(obj);
         }
         catch (ApiException ex)
