@@ -7,6 +7,8 @@ using Recipes.Api.Entities;
 using Recipes.Api.Services;
 using Recipes.Api;
 using static Recipes.Api.Constants.DBConstants;
+using FluentValidation;
+using Recipes.Shared.Models;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 
@@ -30,6 +32,10 @@ public class Startup : FunctionsStartup
 
                opts.UseCosmos(connectionString, databaseName);
            });
+
+        builder.Services.AddScoped<IValidator<IngredientCreate>, IngredientValidator>();
+        builder.Services.AddScoped<IValidator<MaterialCreate>, MaterialValidator>();
+        builder.Services.AddScoped<IValidator<RecipeCreate>, RecipeValidator>();
 
         builder.Services.AddScoped<IIngredientsService, IngredientsService>();
         builder.Services.AddScoped<IMaterialsService, MaterialsService>();
