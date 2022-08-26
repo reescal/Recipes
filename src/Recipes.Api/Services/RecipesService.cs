@@ -7,7 +7,7 @@ using System;
 using System.Linq;
 using Recipes.Api.Wrappers;
 using static Recipes.Api.Wrappers.Helpers;
-using static Recipes.Api.Constants.Responses;
+using Recipes.Shared.Enums;
 
 namespace Recipes.Api.Services;
 
@@ -52,7 +52,7 @@ public class RecipesService : IRecipesService
         return response;
     }
 
-    public IEnumerable<ComplexEntity> GetNames(int? _lang)
+    public IEnumerable<ComplexEntity> GetNames(Lang? _lang)
     {
         var result = context.Recipes.AsNoTracking().AsEnumerable();
         var response = result.Select(x => (ComplexEntity)x);
@@ -61,7 +61,6 @@ public class RecipesService : IRecipesService
 
     public async Task<string> InsertAsync(RecipeCreate recipe)
     {
-        LangsExist(recipe.Properties);
         CheckIngredients(recipe);
 
         var i = new Recipe
@@ -83,7 +82,6 @@ public class RecipesService : IRecipesService
 
     public async Task<Recipe> UpdateAsync(Guid id, RecipeCreate recipe)
     {
-        LangsExist(recipe.Properties);
         CheckIngredients(recipe);
 
         var i = await FindById(context.Set<Recipe>(), id);
@@ -112,18 +110,13 @@ public class RecipesService : IRecipesService
     }
 
     private void CheckIngredients(RecipeCreate r)
-    {
-        foreach (var ingredient in r.Ingredients)
-        {
-            _ = context.Ingredients.Find(ingredient.IngredientId) ?? throw new ApiException(NotFound(nameof(Ingredient), ingredient.IngredientId), 404);
-        }
-    }
+        => r.Ingredients.ForEach(async x => await FindById(context.Set<Ingredient>(), x.IngredientId));
 }
 
 public interface IRecipesService
 {
     public Task<RecipeResponse> GetAsync(Guid id);
-    public IEnumerable<ComplexEntity> GetNames(int? _lang);
+    public IEnumerable<ComplexEntity> GetNames(Lang? _lang);
     public IEnumerable<ComplexEntity> GetByIngredients(Guid[] ids);
     public Task<string> InsertAsync(RecipeCreate recipe);
     public Task<Recipe> UpdateAsync(Guid id, RecipeCreate recipe);

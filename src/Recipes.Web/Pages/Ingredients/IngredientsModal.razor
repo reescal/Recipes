@@ -17,12 +17,12 @@
                 <img alt="example" src="@SelectedIngredient.Image" />
             </Cover>
             <ChildContent>
-                <CardMeta Title="@SelectedIngredient.Properties.Single(x => x.LangId == (int)Lang).Name">
+                <CardMeta Title="@SelectedIngredient.Properties.Single(x => x.LangId == Lang).Name">
                     <DescriptionTemplate>
                         <Title>Description</Title>
-                        @SelectedIngredient.Properties.Single(x => x.LangId == (int)Lang).Description
+                        @SelectedIngredient.Properties.Single(x => x.LangId == Lang).Description
                         <Title>Type</Title>
-                        @SelectedIngredient.Properties.Single(x => x.LangId == (int)Lang).Type
+                        @SelectedIngredient.Properties.Single(x => x.LangId == Lang).Type
                     </DescriptionTemplate>
                 </CardMeta>
             </ChildContent>
@@ -65,7 +65,7 @@
 
     private async Task HandleOk(MouseEventArgs e)
     {
-        if (state != ModalAction.Create && state != ModalAction.Update)
+        if (state == ModalAction.Create || state == ModalAction.Update)
         {
             var result = await form?.Submit();
             if (result)
@@ -73,10 +73,11 @@
                 StateHasChanged();
                 await Task.Delay(1000);
                 await Refresh.InvokeAsync();
+                HandleCancel(new MouseEventArgs());
             }
         }
-
-        HandleCancel(new MouseEventArgs());
+        else
+            HandleCancel(new MouseEventArgs());
     }
 
     private void HandleCancel(MouseEventArgs e)

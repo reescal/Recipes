@@ -7,6 +7,7 @@ using System;
 using System.Linq;
 using Recipes.Api.Wrappers;
 using static Recipes.Api.Wrappers.Helpers;
+using Recipes.Shared.Enums;
 
 namespace Recipes.Api.Services;
 
@@ -20,7 +21,7 @@ public class MaterialsService : IMaterialsService
 
     public async Task<Material> GetAsync(Guid id) => await FindById(context.Set<Material>(), id);
 
-    public IEnumerable<ComplexEntity> GetNames(int? _lang)
+    public IEnumerable<ComplexEntity> GetNames(Lang? _lang)
     {
         var result = context.Materials.AsNoTracking().AsEnumerable();
         var response = result.Select(x => (ComplexEntity)x);
@@ -29,8 +30,6 @@ public class MaterialsService : IMaterialsService
 
     public async Task<string> InsertAsync(MaterialCreate material)
     {
-        LangsExist(material.Properties);
-
         var i = new Material
         {
             Id = Guid.NewGuid(),
@@ -46,8 +45,6 @@ public class MaterialsService : IMaterialsService
 
     public async Task<Material> UpdateAsync(Guid id, MaterialCreate material)
     {
-        LangsExist(material.Properties);
-
         var i = await FindById(context.Set<Material>(), id);
 
         foreach (var prop in material.Properties)
@@ -73,7 +70,7 @@ public interface IMaterialsService
 {
     public IEnumerable<Material> Get();
     public Task<Material> GetAsync(Guid id);
-    public IEnumerable<ComplexEntity> GetNames(int? _lang);
+    public IEnumerable<ComplexEntity> GetNames(Lang? _lang);
     public Task<string> InsertAsync(MaterialCreate ingredient);
     public Task<Material> UpdateAsync(Guid id, MaterialCreate ingredient);
 }
