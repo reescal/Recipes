@@ -6,9 +6,9 @@ using Microsoft.EntityFrameworkCore;
 using Recipes.Api.Entities;
 using Recipes.Api.Services;
 using Recipes.Api;
-using static Recipes.Api.Constants.DBConstants;
 using FluentValidation;
 using Recipes.Shared.Models;
+using Recipes.Shared.Helpers;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 
@@ -17,6 +17,8 @@ namespace Recipes.Api;
 public class Startup : FunctionsStartup
 {
     private static readonly IConfigurationRoot Configuration = new ConfigurationBuilder()
+                                                                    .SetBasePath(Environment.CurrentDirectory)
+                                                                    .AddJsonFile("local.settings.json", true)
                                                                     .AddEnvironmentVariables()
                                                                     .Build();
 
@@ -25,12 +27,8 @@ public class Startup : FunctionsStartup
         builder.Services.AddDbContextFactory<DocsContext>(
            (DbContextOptionsBuilder opts) =>
            {
-               var connectionString = Configuration[connString];
-               var databaseName = Configuration[dbName];
-               if (string.IsNullOrEmpty(connectionString) || string.IsNullOrEmpty(databaseName))
-                   throw new InvalidOperationException(ex);
-
-               opts.UseCosmos(connectionString, databaseName);
+               var cosmosConfig = Helpers.Configuration.Cosmos(Configuration);
+               opts.UseCosmos(cosmosConfig.ConnectionString, cosmosConfig.DatabaseName);
            });
 
         builder.Services.AddScoped<IValidator<IngredientCreate>, IngredientValidator>();
