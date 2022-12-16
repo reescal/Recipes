@@ -31,6 +31,7 @@ jobs:
       run: dotnet test ./src/Recipes.Tests/Recipes.Tests.csproj --no-restore --verbosity normal
 
   build_and_deploy_job:
+    needs: build_and_test
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
     name: Build and Deploy Job
@@ -53,6 +54,7 @@ jobs:
           ###### End of Repository/Build Configurations ######
 
   close_pull_request_job:
+    needs: build_and_test
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
     name: Close Pull Request Job

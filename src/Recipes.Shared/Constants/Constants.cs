@@ -29,7 +29,7 @@ public static class HttpMethods
 
 public static class DBConstants
 {
-    public const string connString = "CosmosDBConnection";
+    public const string connString = "COSMOSDBCONNECTION";
     public const string dbName = "DatabaseName";
     public const string ex = "Please specify a valid CosmosDB connection string and database name in the local.settings.json file or your Azure Functions Settings.";
 }
