@@ -349,3 +349,4 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 /src/Recipes.Api/local.settings.json
+/src/Recipes.Tests/local.settings.json
