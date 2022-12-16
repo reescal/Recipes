@@ -9,7 +9,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Recipes.Api", "Recipes.Api\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Recipes.Shared", "Recipes.Shared\Recipes.Shared.csproj", "{A1A5DC4B-EFFB-4B66-8509-4B1163A9F3A5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Recipes.Tests", "Recipes.Tests\Recipes.Tests.csproj", "{4E0978FE-52C3-432E-A0CD-F3BACEC17D77}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Recipes.Tests", "Recipes.Tests\Recipes.Tests.csproj", "{4E0978FE-52C3-432E-A0CD-F3BACEC17D77}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7436DB78-63C9-4BDF-8200-0099BAD3E6AF}"
+	ProjectSection(SolutionItems) = preProject
+		..\.github\workflows\azure-static-web-apps-gentle-sea-0791a5f0f.yml = ..\.github\workflows\azure-static-web-apps-gentle-sea-0791a5f0f.yml
+		..\README.md = ..\README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

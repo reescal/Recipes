@@ -271,6 +271,7 @@ public class RecipesTests
         validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Invalid("Language"));
 
         recipeProperty.LangId = Shared.Enums.Lang.English;
+        recipe.Properties.Add(new() { LangId = Shared.Enums.Lang.Spanish, Description = "Descripcion", Name = "Nombre", Type = "Tipo" });
         recipe.Ingredients = new();
         req = CreateMockRequest(recipe);
         result = await _sut.CreateRecipe(req.Object);

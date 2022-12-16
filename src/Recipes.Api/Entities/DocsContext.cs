@@ -5,8 +5,10 @@ namespace Recipes.Api.Entities
 {
     public class DocsContext : DbContext
     {
-        public DocsContext(DbContextOptions<DocsContext> options) : base(options)
+        private readonly string _container;
+        public DocsContext(DbContextOptions<DocsContext> options, string container) : base(options)
         {
+            _container = container ?? nameof(DocsContext);
         }
 
         public DbSet<Ingredient> Ingredients { get; set; }
@@ -15,6 +17,7 @@ namespace Recipes.Api.Entities
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.HasDefaultContainer(_container);
             modelBuilder.Entity<Ingredient>()
                 .HasPartitionKey(x => x.Id)
                 .OwnsMany(x => x.Properties);

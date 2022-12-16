@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Recipes.Shared.Models;
 using static Recipes.Shared.Constants.Responses;
+using Recipes.Api.Entities;
+using Microsoft.Extensions.Configuration;
+using static Recipes.Shared.Helpers.Helpers;
 
 namespace Recipes.Api.Wrappers;
 
@@ -54,4 +57,12 @@ public static class Helpers
 
     public static IEnumerable<T> FilterLang<T>(this IEnumerable<T> l, Lang? _lang, Func<T, bool> filter) where T : class
         => _lang == null ? l : l.Where(filter);
+
+    public static DocsContext CreateContext(IConfigurationRoot config)
+    {
+        var cosmosConfig = Configuration.Cosmos(config);
+        var options = new DbContextOptionsBuilder<DocsContext>();
+        options.UseCosmos(cosmosConfig.ConnectionString, cosmosConfig.DatabaseName);
+        return new DocsContext(options.Options, cosmosConfig.ContainerName);
+    }
 }
