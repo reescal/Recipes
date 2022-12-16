@@ -3,7 +3,8 @@ name: Azure Static Web Apps CI/CD
 on:
   push:
     branches:
-      - [ main, 13-Build_and_test_on_pipeline ]
+      - main
+      - 13-Build_and_test_on_pipeline
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches:
