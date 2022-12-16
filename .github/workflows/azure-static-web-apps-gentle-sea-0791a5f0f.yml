@@ -14,8 +14,16 @@ jobs:
   build_and_test:
     runs-on: ubuntu-latest
     name: Build and Test Job
+    env:
+      DATABASE: Recipes
+      CONTAINER: DocsContextTest
     steps:
     - uses: actions/checkout@v3
+    - name: Set environment variables
+      run: 
+        echo "CosmosDBConnection=${{ secrets.COSMOSDBCONNECTION }}" >> $GITHUB_ENV
+        echo "DatabaseName=${{ env.DATABASE }}" >> $GITHUB_ENV
+        echo "ContainerName=${{ env.Container }}" >> $GITHUB_ENV
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v3
       with:
