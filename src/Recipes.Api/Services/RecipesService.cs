@@ -61,7 +61,7 @@ public class RecipesService : IRecipesService
 
     public async Task<string> InsertAsync(RecipeCreate recipe)
     {
-        CheckIngredients(recipe);
+        await CheckIngredients(recipe);
 
         var i = new Recipe
         {
@@ -82,7 +82,7 @@ public class RecipesService : IRecipesService
 
     public async Task<Recipe> UpdateAsync(Guid id, RecipeCreate recipe)
     {
-        CheckIngredients(recipe);
+        await CheckIngredients(recipe);
 
         var i = await FindById(context.Set<Recipe>(), id);
 
@@ -109,8 +109,13 @@ public class RecipesService : IRecipesService
         return i;
     }
 
-    private void CheckIngredients(RecipeCreate r)
-        => r.Ingredients.ForEach(async x => await FindById(context.Set<Ingredient>(), x.IngredientId));
+    private async Task CheckIngredients(RecipeCreate r)
+    {
+        foreach(var ingredient in r.Ingredients)
+        {
+            await FindById(context.Set<Ingredient>(), ingredient.IngredientId, 400);
+        }
+    }
 }
 
 public interface IRecipesService
