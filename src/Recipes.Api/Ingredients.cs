@@ -12,9 +12,9 @@ using Microsoft.OpenApi.Models;
 using Recipes.Shared.Models;
 using Recipes.Api.Services;
 using Recipes.Api.Wrappers;
-using static Recipes.Api.Constants.Constants;
-using static Recipes.Api.Constants.ContentTypes;
-using static Recipes.Api.Constants.HttpMethods;
+using static Recipes.Shared.Constants.Constants;
+using static Recipes.Shared.Constants.ContentTypes;
+using static Recipes.Shared.Constants.HttpMethods;
 using static Recipes.Api.Wrappers.Helpers;
 using FluentValidation;
 using Recipes.Shared.Enums;
@@ -128,7 +128,7 @@ public class Ingredients
 
         var result = await _validator.ValidateAsync(input);
         if (!result.IsValid)
-            return new OkObjectResult(result.Errors);
+            return new BadRequestObjectResult(result.Errors);
 
         var id = await _ingredientService.InsertAsync(input);
         return new OkObjectResult(id);
@@ -146,7 +146,7 @@ public class Ingredients
 
         var result = await _validator.ValidateAsync(input);
         if (!result.IsValid)
-            return new OkObjectResult(result.Errors);
+            return new BadRequestObjectResult(result.Errors);
 
         try
         {
