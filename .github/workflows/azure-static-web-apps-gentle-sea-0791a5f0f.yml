@@ -10,6 +10,18 @@ on:
       - main
 
 jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+    name: Build and Test Job
+    steps:
+    - task: UseDotNet@2
+      inputs:
+        version: '6.x'
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: test
+        projects: '**/*Tests/*.csproj'
+
   build_and_deploy_job:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
