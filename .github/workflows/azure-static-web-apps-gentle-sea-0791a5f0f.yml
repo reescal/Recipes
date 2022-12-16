@@ -19,10 +19,14 @@ jobs:
       CONTAINER: DocsContextTest
     steps:
     - uses: actions/checkout@v3
-    - name: Set environment variables
+    - name: Set cosmosdb connection environment variable
       run: 
         echo "CosmosDBConnection=${{ secrets.COSMOSDBCONNECTION }}" >> $GITHUB_ENV
+    - name: Set cosmosdb database environment variable
+      run: 
         echo "DatabaseName=${{ env.DATABASE }}" >> $GITHUB_ENV
+    - name: Set cosmosdb container environment variable
+      run:
         echo "ContainerName=${{ env.CONTAINER }}" >> $GITHUB_ENV
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v3
