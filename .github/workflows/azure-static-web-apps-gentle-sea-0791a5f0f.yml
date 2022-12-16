@@ -14,10 +14,10 @@ jobs:
     runs-on: ubuntu-latest
     name: Build and Test Job
     steps:
-    - task: UseDotNet@2
+    - uses: UseDotNet@2
       inputs:
         version: '6.x'
-    - task: DotNetCoreCLI@2
+    - uses: DotNetCoreCLI@2
       inputs:
         command: test
         projects: '**/*Tests/*.csproj'
