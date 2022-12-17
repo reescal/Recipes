@@ -1,8 +1,10 @@
 ﻿using FluentValidation;
 using Recipes.Shared.Constants;
+using Recipes.Shared.Entities;
 using Recipes.Shared.Enums;
 using Recipes.Shared.Interfaces;
 using static Recipes.Shared.Models.ValidatorHelpers.ValidatorHelpers;
+using static Recipes.Shared.Constants.Responses;
 
 namespace Recipes.Shared.Models;
 
@@ -65,7 +67,7 @@ public class Quantity
 
 public class RecipeValidator : AbstractValidator<RecipeCreate>
 {
-    public RecipeValidator()
+    public RecipeValidator(DocsContext context)
     {
         RuleFor(p => p.Image).NotEmpty().WithMessage(ValidationError.Required("Image link"));
         RuleFor(p => p.Image).Must(BeUri).When(p => p.Image != null).WithMessage(ValidationError.Invalid("image link"));
@@ -74,7 +76,7 @@ public class RecipeValidator : AbstractValidator<RecipeCreate>
         RuleFor(x => x.Properties).Must(p => p != null && p.Any()).WithMessage(ValidationError.Required(nameof(RecipeCreate.Properties)));
         RuleForEach(x => x.Properties).SetValidator(new RecipePropertiesValidator());
         RuleFor(x => x.Ingredients).Must(p => p != null && p.Any()).WithMessage(ValidationError.Required(nameof(RecipeCreate.Ingredients)));
-        RuleForEach(x => x.Ingredients).SetValidator(new IngredientRowValidator());
+        RuleForEach(x => x.Ingredients).SetValidator(new IngredientRowValidator(context));
     }
 }
 
@@ -95,9 +97,9 @@ public class RecipePropertiesValidator : AbstractValidator<RecipeProperties>
 
 public class IngredientRowValidator : AbstractValidator<IngredientRow>
 {
-    public IngredientRowValidator()
+    public IngredientRowValidator(DocsContext context)
     {
-        //RuleFor(p => p.IngredientId) DI context and check here instead of CheckIngredients method on RecipesService?
+        RuleFor(p => p.IngredientId).Must(p => context.Ingredients.Any(x => x.Id == p)).WithMessage(p => NotFound(nameof(Ingredient), p.IngredientId));
         RuleFor(x => x.Quantity).NotNull().WithMessage(ValidationError.Required(nameof(IngredientRow.Quantity)));
         RuleFor(p => p.Quantity).SetValidator(new QuantityValidator());
         RuleFor(p => p.Preparation).NotEmpty().WithMessage(ValidationError.Required(nameof(IngredientRow.Preparation)));

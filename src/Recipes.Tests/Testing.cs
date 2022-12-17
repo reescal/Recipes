@@ -9,7 +9,7 @@ using Moq;
 using Newtonsoft.Json;
 using Recipes.Api;
 using Recipes.Shared.Constants;
-using Recipes.Api.Entities;
+using Recipes.Shared.Entities;
 using Recipes.Shared.Models;
 using Recipes.Shared.Helpers;
 

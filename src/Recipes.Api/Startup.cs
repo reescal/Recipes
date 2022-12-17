@@ -3,7 +3,7 @@ using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
-using Recipes.Api.Entities;
+using Recipes.Shared.Entities;
 using Recipes.Api.Services;
 using Recipes.Api;
 using FluentValidation;
