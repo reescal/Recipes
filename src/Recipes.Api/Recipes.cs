@@ -62,13 +62,7 @@ public class Recipes
     {
         try
         {
-            Lang? lang = null;
-
-            if (req.Query.ContainsKey(langId))
-            {
-                LangExists(req.Query[langId]);
-                lang = Enum.Parse<Lang>(req.Query[langId]);
-            }
+            var lang = CheckQueryLangId(req.Query);
 
             var ingredients = _recipeService.GetNames(lang);
 

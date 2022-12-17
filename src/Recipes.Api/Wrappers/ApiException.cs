@@ -14,16 +14,10 @@ public class ApiException : HttpResponseException
     {
     }
 
-    public IActionResult Exception
+    public IActionResult Exception => Response.StatusCode switch
     {
-        get
-        {
-            return Response.StatusCode switch
-            {
-                HttpStatusCode.BadRequest => new BadRequestObjectResult(Response.ReasonPhrase),
-                HttpStatusCode.NotFound => new NotFoundObjectResult(Response.ReasonPhrase),
-                _ => new BadRequestResult(),
-            };
-        }
-    }
+        HttpStatusCode.BadRequest => new BadRequestObjectResult(Response.ReasonPhrase),
+        HttpStatusCode.NotFound => new NotFoundObjectResult(Response.ReasonPhrase),
+        _ => new BadRequestResult(),
+    };
 }

@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Recipes.Shared.Models;
 using static Recipes.Shared.Constants.Responses;
+using static Recipes.Shared.Constants.Constants;
+using FluentValidation;
 
 namespace Recipes.Api.Wrappers;
 
@@ -16,7 +18,7 @@ public static class Helpers
 {
     public static async Task<T> DeserializeAsync<T>(HttpRequest req)
     {
-        string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+        var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
         var input = JsonConvert.DeserializeObject<T>(requestBody);
         return input;
     }
@@ -54,4 +56,13 @@ public static class Helpers
 
     public static IEnumerable<T> FilterLang<T>(this IEnumerable<T> l, Lang? _lang, Func<T, bool> filter) where T : class
         => _lang == null ? l : l.Where(filter);
+
+    public static Lang? CheckQueryLangId(IQueryCollection qc)
+    {
+        if(!qc.ContainsKey(langId))
+            return null;
+
+        LangExists(qc[langId]);
+        return Enum.Parse<Lang>(qc[langId]);
+    }
 }

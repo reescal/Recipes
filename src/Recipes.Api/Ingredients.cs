@@ -26,7 +26,7 @@ public class Ingredients
     private const string _name = nameof(Ingredients);
     private readonly ILogger<Ingredients> _logger;
     private readonly IIngredientsService _ingredientService;
-    private IValidator<IngredientCreate> _validator;
+    private readonly IValidator<IngredientCreate> _validator;
 
     public Ingredients(ILogger<Ingredients> log, IIngredientsService ingredientService, IValidator<IngredientCreate> validator)
     {
@@ -72,13 +72,7 @@ public class Ingredients
     {
         try
         {
-            Lang? lang = null;
-
-            if (req.Query.ContainsKey(langId))
-            {
-                LangExists(req.Query[langId]);
-                lang = Enum.Parse<Lang>(req.Query[langId]);
-            }
+            var lang = CheckQueryLangId(req.Query);
 
             var ingredients = _ingredientService.GetNames(lang);
 
@@ -99,13 +93,7 @@ public class Ingredients
     {
         try
         {
-            Lang? lang = null;
-
-            if (req.Query.ContainsKey(langId))
-            {
-                LangExists(req.Query[langId]);
-                lang = Enum.Parse<Lang>(req.Query[langId]);
-            }
+            var lang = CheckQueryLangId(req.Query);
 
             var ingredients = _ingredientService.GetTypes(lang);
 
