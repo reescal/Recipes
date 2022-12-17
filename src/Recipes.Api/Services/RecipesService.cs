@@ -15,7 +15,7 @@ public class RecipesService : IRecipesService
 {
     private readonly DocsContext context;
 
-    public RecipesService(IDbContextFactory<DocsContext> factory) => context = factory.CreateDbContext();
+    public RecipesService(DocsContext context) => this.context = context;
 
     public async Task<RecipeResponse> GetAsync(Guid id)
     {

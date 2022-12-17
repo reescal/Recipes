@@ -232,6 +232,7 @@ public class MaterialsTests
         validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Invalid("Language"));
 
         materialProperty.LangId = Shared.Enums.Lang.English;
+        material.Properties.Add(new() { LangId = Shared.Enums.Lang.Spanish, Description = "Descripcion", Name = "Nombre", Type = "Tipo" });
         req = CreateMockRequest(material);
         result = await _sut.CreateMaterial(req.Object);
         result.ShouldBeAssignableTo<OkObjectResult>();

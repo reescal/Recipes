@@ -1,6 +1,5 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -11,7 +10,6 @@ using Recipes.Api;
 using Recipes.Shared.Constants;
 using Recipes.Shared.Entities;
 using Recipes.Shared.Models;
-using Recipes.Shared.Helpers;
 
 namespace Recipes.Tests;
 
@@ -27,10 +25,11 @@ public static class Testing
     {
         get
         {
-            var dbName = Configuration[DBConstants.dbName];
-            if(string.IsNullOrEmpty(dbName))
-                Environment.SetEnvironmentVariable(DBConstants.dbName, "RecipesTest");
-            return new HostBuilder().ConfigureWebJobs(new Startup().Configure).Build().Services;
+            var startup = new Startup() 
+            { 
+                Configuration = Configuration 
+            };
+            return new HostBuilder().ConfigureWebJobs(startup.Configure).Build().Services;
         }
     }
 
@@ -55,12 +54,9 @@ public static class Testing
 
     public static async Task<T> CreateEntity<T>(T t) where T : class, new()
     {
-        var cosmosConfig = Helpers.Configuration.Cosmos(Configuration);
-        var options = new DbContextOptionsBuilder<DocsContext>();
-        options.UseCosmos(cosmosConfig.ConnectionString, cosmosConfig.DatabaseName);
-        var _sut = new DocsContext(options.Options);
-        _sut.Set<T>().Add(t);
-        await _sut.SaveChangesAsync();
+        var context = CreateContext(Configuration);
+        context.Set<T>().Add(t);
+        await context.SaveChangesAsync();
         return t;
     }
 

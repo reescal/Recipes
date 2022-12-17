@@ -15,7 +15,7 @@ public class IngredientsService : IIngredientsService
 {
     private readonly DocsContext context;
 
-    public IngredientsService(IDbContextFactory<DocsContext> factory) => context = factory.CreateDbContext();
+    public IngredientsService(DocsContext context) => this.context = context;
 
     public IEnumerable<Ingredient> Get() => context.Ingredients.AsNoTracking().AsEnumerable();
 
