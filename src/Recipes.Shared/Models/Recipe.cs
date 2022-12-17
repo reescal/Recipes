@@ -99,7 +99,7 @@ public class IngredientRowValidator : AbstractValidator<IngredientRow>
 {
     public IngredientRowValidator(DocsContext context)
     {
-        RuleFor(p => p.IngredientId).Must(p => context.Ingredients.Any(x => x.Id == p)).WithMessage(p => NotFound(nameof(Ingredient), p.IngredientId));
+        RuleFor(p => p.IngredientId).Must(p => context.Ingredients.Find(p) != null).WithMessage(p => NotFound(nameof(Ingredient), p.IngredientId));
         RuleFor(x => x.Quantity).NotNull().WithMessage(ValidationError.Required(nameof(IngredientRow.Quantity)));
         RuleFor(p => p.Quantity).SetValidator(new QuantityValidator());
         RuleFor(p => p.Preparation).NotEmpty().WithMessage(ValidationError.Required(nameof(IngredientRow.Preparation)));

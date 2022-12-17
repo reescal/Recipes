@@ -7,8 +7,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Newtonsoft.Json;
 using Recipes.Api;
-using Recipes.Shared.Constants;
-using Recipes.Shared.Entities;
+using static Recipes.Shared.Helpers.Helpers.Entities;
 using Recipes.Shared.Models;
 
 namespace Recipes.Tests;

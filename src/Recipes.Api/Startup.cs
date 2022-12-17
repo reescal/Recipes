@@ -7,7 +7,7 @@ using Recipes.Api.Services;
 using Recipes.Api;
 using FluentValidation;
 using Recipes.Shared.Models;
-using static Recipes.Api.Wrappers.Helpers;
+using static Recipes.Shared.Helpers.Helpers.Entities;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 
