@@ -7,7 +7,8 @@ using Recipes.Api.Services;
 using Recipes.Api;
 using FluentValidation;
 using Recipes.Shared.Models;
-using static Recipes.Shared.Helpers.Helpers.Entities;
+using static Recipes.Shared.Helpers.Helpers.Configuration;
+using Microsoft.EntityFrameworkCore;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 
@@ -23,7 +24,13 @@ public class Startup : FunctionsStartup
 
     public override void Configure(IFunctionsHostBuilder builder)
     {
-        builder.Services.AddScoped<DocsContext>(s => CreateContext(Configuration));
+        builder.Services.AddTransient<IConfiguration>(o => Configuration);
+        builder.Services.AddDbContextFactory<DocsContext>(
+           (DbContextOptionsBuilder opts) =>
+           {
+               var cosmosConfig = Cosmos(Configuration);
+               opts.UseCosmos(cosmosConfig.ConnectionString, cosmosConfig.DatabaseName);
+           });
 
         builder.Services.AddScoped<IValidator<IngredientCreate>, IngredientValidator>();
         builder.Services.AddScoped<IValidator<MaterialCreate>, MaterialValidator>();

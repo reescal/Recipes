@@ -1,7 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Recipes.Shared.Constants;
-using Recipes.Shared.Entities;
 using static Recipes.Shared.Constants.DBConstants;
 
 namespace Recipes.Shared.Helpers;
@@ -18,17 +16,6 @@ public static class Helpers
             return string.IsNullOrEmpty(connectionString) || string.IsNullOrEmpty(databaseName)
                 ? throw new InvalidOperationException(ex)
                 : ((string ConnectionString, string DatabaseName, string ContainerName))(connectionString, databaseName, containerName);
-        }
-    }
-
-    public static class Entities
-    {
-        public static DocsContext CreateContext(IConfigurationRoot config)
-        {
-            var cosmosConfig = Configuration.Cosmos(config);
-            var options = new DbContextOptionsBuilder<DocsContext>();
-            options.UseCosmos(cosmosConfig.ConnectionString, cosmosConfig.DatabaseName);
-            return new DocsContext(options.Options, cosmosConfig.ContainerName);
         }
     }
 }

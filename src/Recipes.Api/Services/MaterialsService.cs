@@ -15,7 +15,7 @@ public class MaterialsService : IMaterialsService
 {
     private readonly DocsContext context;
 
-    public MaterialsService(DocsContext context) => this.context = context;
+    public MaterialsService(IDbContextFactory<DocsContext> factory) => context = factory.CreateDbContext();
 
     public IEnumerable<Material> Get() => context.Materials.AsNoTracking().AsEnumerable();
 
