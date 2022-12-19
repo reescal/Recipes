@@ -1,23 +1,29 @@
 ﻿@typeparam TItem
 @inject NavigationManager NavigationManager
 
-<AutoComplete TOption="string" OnInput="OnInput" OnSelectionChange="OnSelectionChange">
-    <OverlayTemplate>
-        @foreach (var group in filteredEntities)
-        {
-            <AutoCompleteOptGroup Label="@group.Key">
-                <ChildContent>
-                    @foreach (var option in group)
-                    {
-                        <AutoCompleteOption Value="@option" Label="@option.Properties.Name" />
-                    }
-                </ChildContent>
-            </AutoCompleteOptGroup>
-        }
-    </OverlayTemplate>
-</AutoComplete>
+<GridRow>
+    <GridCol Flex=@("auto")>
+        <AutoComplete TOption="string" OnInput="OnInput" OnSelectionChange="OnSelectionChange">
+            <OverlayTemplate>
+                @foreach (var group in filteredEntities)
+                {
+                    <AutoCompleteOptGroup Label="@group.Key">
+                        <ChildContent>
+                            @foreach (var option in group)
+                            {
+                                <AutoCompleteOption Value="@option" Label="@option.Properties.Name" />
+                            }
+                        </ChildContent>
+                    </AutoCompleteOptGroup>
+                }
+            </OverlayTemplate>
+        </AutoComplete>
+    </GridCol>
+    <GridCol Flex=@("32px")>
+        <Button Type="@ButtonType.Default" Icon="@IconType.Outline.Plus" OnClick="async () => await CreateAction.InvokeAsync()" />
+    </GridCol>
+</GridRow>
 
-<Button Type="@ButtonType.Default" Icon="@IconType.Outline.Plus" OnClick="async () => await CreateAction.InvokeAsync()" />
 
 @foreach(var group in filteredEntities)
 {
@@ -26,7 +32,7 @@
         <ListItem>
             <Card Size="small" Hoverable Bordered>
                 <Cover>
-                    <img alt="example" src="@context.Image" @onclick="@(() => NavigateTo(context.Id))" />
+                    <img src="@context.Image" @onclick="@(() => NavigateTo(context.Id))" />
                 </Cover>
                 <ChildContent>
                     <CardMeta Title="@context.Properties.Name" />

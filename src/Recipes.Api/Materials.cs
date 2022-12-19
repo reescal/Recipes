@@ -83,6 +83,27 @@ public class Materials
         }
     }
 
+    [FunctionName(nameof(GetMaterialTypes))]
+    [OpenApiOperation(operationId: nameof(GetMaterialTypes), tags: new[] { _name })]
+    [OpenApiParameter(name: langId, In = ParameterLocation.Query, Required = false, Type = typeof(int), Description = "The **Lang Id** parameter")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: json, bodyType: typeof(IEnumerable<EntityTypes>), Description = "The OK response")]
+    public IActionResult GetMaterialTypes(
+        [HttpTrigger(AuthorizationLevel.Anonymous, get, Route = _name + "/Types")] HttpRequest req)
+    {
+        try
+        {
+            var lang = CheckQueryLangId(req.Query);
+
+            var ingredients = _materialService.GetTypes(lang);
+
+            return new OkObjectResult(ingredients);
+        }
+        catch(ApiException ex)
+        {
+            return ex.Exception;
+        }
+    }
+
     [FunctionName(nameof(CreateMaterial))]
     [OpenApiOperation(operationId: nameof(CreateMaterial), tags: new[] { _name })]
     [OpenApiRequestBody(contentType: json, bodyType: typeof(MaterialCreate), Description = nameof(Material), Required = true)]

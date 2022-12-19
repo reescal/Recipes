@@ -1,0 +1,38 @@
+﻿@page "/Materials"
+@page "/Materials/{Id:guid}"
+@using Recipes.Web.Services
+@inject IMaterialsService _materialsService
+
+@if(ingredients != null)
+{
+        <FilterableCardGrid Entities="@entities" TItem="ComplexEntity" CreateAction="() => materialsModal?.Show()" Route="Materials" />
+        <CascadingValue Value="@Id">
+        <MaterialsModal SelectedMaterial="@SelectedMaterial" Refresh="Refresh" @ref="materialsModal" Route="Materials" />
+        </CascadingValue>
+}
+
+@code {
+    private IEnumerable<Material> ingredients { get; set; } = new List<Material>();
+
+    private IEnumerable<ComplexEntity> entities => ingredients.Select(x => (ComplexEntity)x);
+
+    private Material? SelectedMaterial = default;
+
+    private MaterialsModal? materialsModal;
+
+    [Parameter]
+    public Guid? Id { get; set; }
+
+    protected override async Task OnInitializedAsync() => ingredients = await _materialsService.Get();
+
+    protected override void OnParametersSet()
+    {
+        if(Id == null)
+            return;
+
+        SelectedMaterial = ingredients.FirstOrDefault(x => x.Id == Id);
+        materialsModal?.Show();
+    }
+
+    private async Task Refresh() => ingredients = await _materialsService.Get();
+}
