@@ -1,4 +1,4 @@
-﻿using Recipes.Api.Entities;
+﻿using Recipes.Shared.Entities;
 using Recipes.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;

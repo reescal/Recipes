@@ -16,7 +16,6 @@ using static Recipes.Shared.Constants.Constants;
 using static Recipes.Shared.Constants.ContentTypes;
 using static Recipes.Shared.Constants.HttpMethods;
 using static Recipes.Api.Wrappers.Helpers;
-using Recipes.Shared.Enums;
 using FluentValidation;
 
 namespace Recipes.Api;
@@ -72,13 +71,7 @@ public class Materials
     {
         try
         {
-            Lang? lang = null;
-
-            if (req.Query.ContainsKey(langId))
-            {
-                LangExists(req.Query[langId]);
-                lang = Enum.Parse<Lang>(req.Query[langId]);
-            }
+            var lang = CheckQueryLangId(req.Query);
 
             var ingredients = _materialService.GetNames(lang);
 

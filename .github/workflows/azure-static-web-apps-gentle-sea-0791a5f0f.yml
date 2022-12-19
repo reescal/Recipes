@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - 13-Build_and_test_on_pipeline
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches:
@@ -17,6 +16,7 @@ jobs:
     env:
       DATABASE: Recipes
       CONTAINER: DocsContextTest
+      DOTNET_VERSION: '7.0.101'
     steps:
     - uses: actions/checkout@v3
     - name: Set environment variables

@@ -289,8 +289,9 @@ public class RecipesTests
         resultObject = ((BadRequestObjectResult)result).Value;
         resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
         validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(2);
+        validationFailures!.Count.ShouldBe(3);
         validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(Quantity)));
+        validationFailures.Select(x => x.ErrorMessage).ShouldContain(Responses.NotFound(nameof(Ingredient), new Guid()));
         validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(IngredientRow.Preparation)));
 
         var recipeIngredient = recipe.Ingredients.First();
@@ -301,7 +302,7 @@ public class RecipesTests
         resultObject = ((BadRequestObjectResult)result).Value;
         resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
         validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(2);
+        validationFailures!.Count.ShouldBe(3);
         validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(IngredientRow.Preparation)));
 
         recipeIngredient.Preparation = "012345678901234567890123456789012345678901234567890";
@@ -311,7 +312,7 @@ public class RecipesTests
         resultObject = ((BadRequestObjectResult)result).Value;
         resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
         validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(2);
+        validationFailures!.Count.ShouldBe(3);
         validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.TooLong(nameof(IngredientRow.Preparation)));
 
         recipeIngredient.Preparation = "01234567890123456789012345678901234567890123456789";
@@ -322,7 +323,7 @@ public class RecipesTests
         resultObject = ((BadRequestObjectResult)result).Value;
         resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
         validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(2);
+        validationFailures!.Count.ShouldBe(3);
         validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(Quantity.Value)));
         validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(Quantity.Unit)));
 
@@ -334,7 +335,7 @@ public class RecipesTests
         resultObject = ((BadRequestObjectResult)result).Value;
         resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
         validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(1);
+        validationFailures!.Count.ShouldBe(2);
         validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(Quantity.Unit)));
 
         recipeIngredient.Quantity.Unit = "01234567890";
@@ -344,17 +345,10 @@ public class RecipesTests
         resultObject = ((BadRequestObjectResult)result).Value;
         resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
         validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(1);
+        validationFailures!.Count.ShouldBe(2);
         validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.TooLong(nameof(Quantity.Unit)));
 
         recipeIngredient.Quantity.Unit = "0123456789";
-        req = CreateMockRequest(recipe);
-        result = await _sut.CreateRecipe(req.Object);
-        result.ShouldBeAssignableTo<BadRequestObjectResult>();
-        resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<string>();
-        (resultObject as string).ShouldBe(Responses.NotFound(nameof(Ingredient), new Guid()));
-
         var ingredient = await CreateIngredient();
         recipeIngredient.IngredientId = ingredient.Id;
         req = CreateMockRequest(recipe);

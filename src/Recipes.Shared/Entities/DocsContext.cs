@@ -1,7 +1,7 @@
 ﻿using Recipes.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace Recipes.Api.Entities
+namespace Recipes.Shared.Entities
 {
     public class DocsContext : DbContext
     {

@@ -1,4 +1,4 @@
-﻿using Recipes.Api.Entities;
+﻿using Recipes.Shared.Entities;
 using Recipes.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
@@ -61,8 +61,6 @@ public class RecipesService : IRecipesService
 
     public async Task<string> InsertAsync(RecipeCreate recipe)
     {
-        await CheckIngredients(recipe);
-
         var i = new Recipe
         {
             Id = Guid.NewGuid(),
@@ -82,8 +80,6 @@ public class RecipesService : IRecipesService
 
     public async Task<Recipe> UpdateAsync(Guid id, RecipeCreate recipe)
     {
-        await CheckIngredients(recipe);
-
         var i = await FindById(context.Set<Recipe>(), id);
 
         foreach (var prop in recipe.Properties)
@@ -107,14 +103,6 @@ public class RecipesService : IRecipesService
         await context.SaveChangesAsync();
 
         return i;
-    }
-
-    private async Task CheckIngredients(RecipeCreate r)
-    {
-        foreach(var ingredient in r.Ingredients)
-        {
-            await FindById(context.Set<Ingredient>(), ingredient.IngredientId, 400);
-        }
     }
 }
 
