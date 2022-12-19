@@ -1,4 +1,4 @@
-﻿using Recipes.Shared.Models;
+using Recipes.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Recipes.Shared.Constants;
