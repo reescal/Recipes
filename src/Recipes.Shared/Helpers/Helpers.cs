@@ -28,7 +28,7 @@ public static class Helpers
             var cosmosConfig = Configuration.Cosmos(config);
             var options = new DbContextOptionsBuilder<DocsContext>();
             options.UseCosmos(cosmosConfig.ConnectionString, cosmosConfig.DatabaseName);
-            return new DocsContext(options.Options, cosmosConfig.ContainerName);
+            return new DocsContext(options.Options, config);
         }
     }
 }
