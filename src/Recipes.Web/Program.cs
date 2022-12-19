@@ -10,6 +10,7 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.Services.AddHttpClient("API", x => x.BaseAddress = new Uri(builder.Configuration["API"] ?? builder.HostEnvironment.BaseAddress));
 
 builder.Services.AddScoped<IIngredientsService, IngredientsService>();
+builder.Services.AddScoped<IMaterialsService, MaterialsService>();
 
 builder.Services.AddAntDesign();
 

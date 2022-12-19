@@ -28,17 +28,17 @@ public class IngredientsService : IIngredientsService
         return response.FilterLang(_lang);
     }
 
-    public HashSet<IngredientTypes> GetTypes(Lang? _lang)
+    public HashSet<EntityTypes> GetTypes(Lang? _lang)
     {
         var result = context.Ingredients.AsNoTracking().AsEnumerable().Select(x => x.Properties);
-        var response = new HashSet<IngredientTypes>()
+        var response = new HashSet<EntityTypes>()
             {
-                new IngredientTypes()
+                new EntityTypes()
                 {
                     LangId = Lang.English,
                     Types = result.Select(x => x.First(y => y.LangId == Lang.English).Type).ToHashSet()
                 },
-                new IngredientTypes()
+                new EntityTypes()
                 {
                     LangId = Lang.Spanish,
                     Types = result.Select(x => x.First(y => y.LangId == Lang.Spanish).Type).ToHashSet()
@@ -92,7 +92,7 @@ public interface IIngredientsService
     public IEnumerable<Ingredient> Get();
     public Task<Ingredient> GetAsync(Guid id);
     public IEnumerable<ComplexEntity> GetNames(Lang? _lang);
-    public HashSet<IngredientTypes> GetTypes(Lang? _lang);
+    public HashSet<EntityTypes> GetTypes(Lang? _lang);
     public Task<string> InsertAsync(IngredientCreate ingredient);
     public Task<Ingredient> UpdateAsync(Guid id, IngredientCreate ingredient);
 }

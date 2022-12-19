@@ -28,6 +28,26 @@ public class MaterialsService : IMaterialsService
         return response.FilterLang(_lang);
     }
 
+    public HashSet<EntityTypes> GetTypes(Lang? _lang)
+    {
+        var result = context.Materials.AsNoTracking().AsEnumerable().Select(x => x.Properties);
+        var response = new HashSet<EntityTypes>()
+            {
+                new EntityTypes()
+                {
+                    LangId = Lang.English,
+                    Types = result.Select(x => x.First(y => y.LangId == Lang.English).Type).ToHashSet()
+                },
+                new EntityTypes()
+                {
+                    LangId = Lang.Spanish,
+                    Types = result.Select(x => x.First(y => y.LangId == Lang.Spanish).Type).ToHashSet()
+                }
+        };
+
+        return response.FilterLang(_lang, x => x.LangId == _lang).ToHashSet();
+    }
+
     public async Task<string> InsertAsync(MaterialCreate material)
     {
         var i = new Material
@@ -71,6 +91,7 @@ public interface IMaterialsService
     public IEnumerable<Material> Get();
     public Task<Material> GetAsync(Guid id);
     public IEnumerable<ComplexEntity> GetNames(Lang? _lang);
+    public HashSet<EntityTypes> GetTypes(Lang? _lang);
     public Task<string> InsertAsync(MaterialCreate ingredient);
     public Task<Material> UpdateAsync(Guid id, MaterialCreate ingredient);
 }

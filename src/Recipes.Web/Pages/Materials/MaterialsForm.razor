@@ -1,9 +1,9 @@
 ﻿@using Recipes.Web.Services
-@inject IIngredientsService _ingredientsService
+@inject IMaterialsService _materialsService
 
 @if(formState == FormState.None)
 {
-    <Form Model="@ingredient" @ref="@_form" Layout="@FormLayout.Vertical">
+    <Form Model="@material" @ref="@_form" Layout="@FormLayout.Vertical">
         <Validator>
             <FluentValidationValidator />
         </Validator>
@@ -21,7 +21,7 @@
                     <TextArea @bind-Value="@g.Description" />
                 </FormItem>
                 <FormItem Label="Type">
-                    <AutoComplete @bind-Value="@g.Type" Options="@IngredientTypes(g.LangId)" />
+                    <AutoComplete @bind-Value="@g.Type" Options="@MaterialTypes(g.LangId)" />
                 </FormItem>
             }
         </ChildContent>
@@ -48,39 +48,39 @@ else
     [Parameter]
     public ModalAction State { get; set; }
     [Parameter]
-    public IngredientCreate SelectedIngredient { get; set; }
+    public MaterialCreate SelectedMaterial { get; set; }
 
-    private HashSet<EntityTypes> ingredientTypes { get; set; }
-    private HashSet<string> IngredientTypes(Lang lang) => ingredientTypes?.Single(x => x.LangId == lang)?.Types ?? Enumerable.Empty<string>().ToHashSet();
+    private HashSet<EntityTypes> materialTypes { get; set; }
+    private HashSet<string> MaterialTypes(Lang lang) => materialTypes?.Single(x => x.LangId == lang)?.Types ?? Enumerable.Empty<string>().ToHashSet();
 
-    private IngredientCreate ingredient => State == ModalAction.Update ? SelectedIngredient : i;
+    private MaterialCreate material => State == ModalAction.Update ? SelectedMaterial : i;
 
-    private IngredientCreate i = new IngredientCreate()
-    {
-        Properties = new IndexHashSet<IngredientProperties>()
+    private MaterialCreate i = new MaterialCreate()
         {
-            new IngredientProperties() { LangId = Recipes.Shared.Enums.Lang.English },
-            new IngredientProperties() { LangId = Recipes.Shared.Enums.Lang.Spanish }
+            Properties = new IndexHashSet<MaterialProperties>()
+        {
+            new MaterialProperties() { LangId = Recipes.Shared.Enums.Lang.English },
+            new MaterialProperties() { LangId = Recipes.Shared.Enums.Lang.Spanish }
         }
-    };
+        };
 
-    private Form<IngredientCreate> _form;
+    private Form<MaterialCreate> _form;
     private FormState formState = FormState.None;
     private string response = string.Empty;
 
-    protected override async Task OnInitializedAsync() => ingredientTypes = await _ingredientsService.GetTypes();
+    protected override async Task OnInitializedAsync() => materialTypes = await _materialsService.GetTypes();
 
-    protected override async Task OnAfterRenderAsync(bool firstRender) => ingredientTypes = await _ingredientsService.GetTypes();
+    protected override async Task OnAfterRenderAsync(bool firstRender) => materialTypes = await _materialsService.GetTypes();
 
     public async Task<bool> Submit()
     {
-        if (!_form.Validate())
+        if(!_form.Validate())
             return false;
 
-        if (State == ModalAction.Create)
-            response = await _ingredientsService.Add(ingredient);
-        else if (State == ModalAction.Update)
-            response = await _ingredientsService.Update((Guid)Id, ingredient);
+        if(State == ModalAction.Create)
+            response = await _materialsService.Add(material);
+        else if(State == ModalAction.Update)
+            response = await _materialsService.Update((Guid)Id, material);
 
         formState = Guid.TryParse(response, out Guid id) ? FormState.Success : FormState.Error;
 

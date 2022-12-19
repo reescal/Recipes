@@ -6,13 +6,14 @@
         <Menu Theme="MenuTheme.Dark" Mode="MenuMode.Horizontal" DefaultSelectedKeys=@(new[]{nameof(Recipes)}) Selectable=false>
             <MenuItem Key=@nameof(Recipes) RouterLink="/Recipes" RouterMatch="NavLinkMatch.All">Recipes</MenuItem>
             <MenuItem Key="Ingredients" RouterLink="/Ingredients" RouterMatch="NavLinkMatch.All">Ingredients</MenuItem>
+            <MenuItem Key="Materials" RouterLink="/Materials" RouterMatch="NavLinkMatch.All">Materials</MenuItem>
             <MenuItem Key="Grocery List" RouterLink="/GroceryList" RouterMatch="NavLinkMatch.All">Grocery List</MenuItem>
             <MenuItem Key="Language" OnClick="ToggleLang">
                 <Icon Type="global" Theme="outline"></Icon>
             </MenuItem>
         </Menu>
     </Header>
-    <Content Style="padding: 0 50px;">
+    <Content Style="padding: 0 10px;">
         <CascadingValue Value="@_lang">
             <div class="page">
                 <main>

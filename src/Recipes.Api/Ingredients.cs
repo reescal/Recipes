@@ -87,7 +87,7 @@ public class Ingredients
     [FunctionName(nameof(GetIngredientTypes))]
     [OpenApiOperation(operationId: nameof(GetIngredientTypes), tags: new[] { _name })]
     [OpenApiParameter(name: langId, In = ParameterLocation.Query, Required = false, Type = typeof(int), Description = "The **Lang Id** parameter")]
-    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: json, bodyType: typeof(IEnumerable<IngredientTypes>), Description = "The OK response")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: json, bodyType: typeof(IEnumerable<EntityTypes>), Description = "The OK response")]
     public IActionResult GetIngredientTypes(
         [HttpTrigger(AuthorizationLevel.Anonymous, get, Route = _name + "/Types")] HttpRequest req)
     {

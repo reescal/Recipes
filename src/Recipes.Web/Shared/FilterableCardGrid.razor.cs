@@ -18,9 +18,9 @@ public partial class FilterableCardGrid<TItem> where TItem : ComplexEntity
     public string Route { get; set; }
 
     private IOrderedEnumerable<SimpleEntity> entities => Entities
-                                                                .Select(e => e.ToSimpleEntity(Lang))
-                                                                .OrderBy(x => x.Properties.Type)
-                                                                .ThenBy(x => x.Properties.Name);
+                                                            .Select(e => e.ToSimpleEntity(Lang))
+                                                            .OrderBy(x => x.Properties.Type)
+                                                            .ThenBy(x => x.Properties.Name);
 
     private IEnumerable<IGrouping<string, SimpleEntity>> filteredEntities =>
         string.IsNullOrEmpty(input) ?

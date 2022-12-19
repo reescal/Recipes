@@ -25,12 +25,6 @@ public class IngredientProperties : IEntityProperties
     public string Type { get; set; }
 }
 
-public class IngredientTypes
-{
-    public Lang LangId { get; set; }
-    public HashSet<string> Types { get; set; }
-}
-
 public class IngredientValidator : AbstractValidator<IngredientCreate>
 {
     public IngredientValidator()

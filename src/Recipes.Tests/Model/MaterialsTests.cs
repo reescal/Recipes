@@ -99,6 +99,50 @@ public class MaterialsTests
             .ShouldBeTrue();
     }
 
+    public void ShouldGetIngredientTypes()
+    {
+        var req = new Mock<HttpRequest>();
+        req.Setup(x => x.Query).Returns(new QueryCollection());
+
+        var result = _sut.GetMaterialTypes(req.Object);
+
+        result.ShouldBeAssignableTo<OkObjectResult>();
+
+        var qC = new QueryCollection(
+            new Dictionary<string, StringValues>()
+            {
+                {
+                    langId,
+                    new StringValues("0")
+                }
+            });
+        req.Setup(x => x.Query).Returns(qC);
+
+        result = _sut.GetMaterialTypes(req.Object);
+
+        result.ShouldBeAssignableTo<BadRequestObjectResult>();
+
+        qC = new QueryCollection(
+            new Dictionary<string, StringValues>()
+            {
+                {
+                    langId,
+                    new StringValues(((int)Shared.Enums.Lang.English).ToString())
+                }
+            });
+        req.Setup(x => x.Query).Returns(qC);
+
+        result = _sut.GetMaterialTypes(req.Object);
+
+        result.ShouldBeAssignableTo<OkObjectResult>();
+        var typesResult = ((OkObjectResult)result).Value;
+        typesResult.ShouldBeAssignableTo<HashSet<EntityTypes>>();
+        var ingredientTypes = typesResult as HashSet<EntityTypes>;
+        ingredientTypes!
+            .All(x => x.LangId == Shared.Enums.Lang.English)
+            .ShouldBeTrue();
+    }
+
     public async Task ShouldCreateMaterial()
     {
         var material = new MaterialCreate();

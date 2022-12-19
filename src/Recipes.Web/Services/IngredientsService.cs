@@ -14,7 +14,7 @@ public class IngredientsService : IIngredientsService
     }
 
     private IEnumerable<Ingredient> Ingredients;
-    private HashSet<IngredientTypes> IngredientTypes;
+    private HashSet<EntityTypes> IngredientTypes;
 
     public async Task<IEnumerable<Ingredient>> Get()
     {
@@ -23,16 +23,17 @@ public class IngredientsService : IIngredientsService
     }
 
     public async Task<Ingredient> Get(Guid id) => await _httpClient.GetFromJsonAsync<Ingredient>(api + id);
-    public async Task<HashSet<IngredientTypes>> GetTypes()
+
+    public async Task<HashSet<EntityTypes>> GetTypes()
     {
-        IngredientTypes ??= await _httpClient.GetFromJsonAsync<HashSet<IngredientTypes>>(api + "Types");
+        IngredientTypes ??= await _httpClient.GetFromJsonAsync<HashSet<EntityTypes>>(api + "Types");
         return IngredientTypes;
     }
 
     public async Task<string> Add(IngredientCreate ingredient)
     {
         var response = await _httpClient.PostAsJsonAsync(api, ingredient);
-        string result = await response.Content.ReadAsStringAsync();
+        var result = await response.Content.ReadAsStringAsync();
         if (response.IsSuccessStatusCode)
         {
             Ingredients = Ingredients.Append(new Ingredient() { Id = Guid.Parse(result), Image = ingredient.Image, Properties = ingredient.Properties });
@@ -47,7 +48,7 @@ public class IngredientsService : IIngredientsService
     public async Task<string> Update(Guid id, IngredientCreate ingredient)
     {
         var response = await _httpClient.PutAsJsonAsync(api + id, ingredient);
-        string result = await response.Content.ReadAsStringAsync();
+        var result = await response.Content.ReadAsStringAsync();
         if (response.IsSuccessStatusCode)
         {
             Ingredients = Ingredients.Where(x => x.Id != id);
@@ -65,7 +66,7 @@ public interface IIngredientsService
 {
     Task<IEnumerable<Ingredient>> Get();
     Task<Ingredient> Get(Guid id);
-    Task<HashSet<IngredientTypes>> GetTypes();
+    Task<HashSet<EntityTypes>> GetTypes();
     Task<string> Add(IngredientCreate ingredient);
     Task<string> Update(Guid id, IngredientCreate ingredient);
 }

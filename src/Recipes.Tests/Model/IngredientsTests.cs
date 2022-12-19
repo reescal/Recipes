@@ -137,8 +137,8 @@ public class IngredientsTests
 
         result.ShouldBeAssignableTo<OkObjectResult>();
         var typesResult = ((OkObjectResult)result).Value;
-        typesResult.ShouldBeAssignableTo<HashSet<IngredientTypes>>();
-        var ingredientTypes = typesResult as HashSet<IngredientTypes>;
+        typesResult.ShouldBeAssignableTo<HashSet<EntityTypes>>();
+        var ingredientTypes = typesResult as HashSet<EntityTypes>;
         ingredientTypes!
             .All(x => x.LangId == Shared.Enums.Lang.English)
             .ShouldBeTrue();

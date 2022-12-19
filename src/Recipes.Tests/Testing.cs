@@ -7,8 +7,10 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Newtonsoft.Json;
 using Recipes.Api;
-using static Recipes.Shared.Helpers.Helpers.Entities;
+using static Recipes.Shared.Helpers.Helpers.Configuration;
 using Recipes.Shared.Models;
+using Microsoft.EntityFrameworkCore;
+using Recipes.Shared.Entities;
 
 namespace Recipes.Tests;
 
@@ -53,7 +55,10 @@ public static class Testing
 
     public static async Task<T> CreateEntity<T>(T t) where T : class, new()
     {
-        var context = CreateContext(Configuration);
+        var cosmosConfig = Cosmos(Configuration);
+        var options = new DbContextOptionsBuilder<DocsContext>();
+        options.UseCosmos(cosmosConfig.ConnectionString, cosmosConfig.DatabaseName);
+        var context = new DocsContext(options.Options, Configuration);
         context.Set<T>().Add(t);
         await context.SaveChangesAsync();
         return t;
