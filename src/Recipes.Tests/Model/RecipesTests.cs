@@ -351,6 +351,18 @@ public class RecipesTests
         recipeIngredient.Quantity.Unit = "0123456789";
         var ingredient = await CreateIngredient();
         recipeIngredient.IngredientId = ingredient.Id;
+        recipe.Materials = new() { new() };
+        req = CreateMockRequest(recipe);
+        result = await _sut.CreateRecipe(req.Object);
+        result.ShouldBeAssignableTo<BadRequestObjectResult>();
+        resultObject = ((BadRequestObjectResult)result).Value;
+        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
+        validationFailures = resultObject as List<ValidationFailure>;
+        validationFailures!.Count.ShouldBe(1);
+        validationFailures.Select(x => x.ErrorMessage).ShouldContain(Responses.NotFound(nameof(Material), new Guid()));
+
+        var material = await CreateMaterial();
+        recipe.Materials = new() { new() { MaterialId = material.Id } };
         req = CreateMockRequest(recipe);
         result = await _sut.CreateRecipe(req.Object);
         result.ShouldBeAssignableTo<OkObjectResult>();

@@ -33,5 +33,7 @@ public class DocsContext : DbContext
             .OwnsMany(x => x.Properties);
         modelBuilder.Entity<Recipe>()
             .OwnsMany(x => x.Ingredients);
+        modelBuilder.Entity<Recipe>()
+            .OwnsMany(x => x.Materials);
     }
 }

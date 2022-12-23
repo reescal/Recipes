@@ -24,6 +24,9 @@ public class RecipesService : IRecipesService
         var ingredientIds = result.Ingredients.Select(x => x.IngredientId);
         var ingredients = context.Ingredients.Where(x => ingredientIds.Contains(x.Id)).AsEnumerable();
 
+        var materialIds = result.Materials.Select(x => x.MaterialId);
+        var materials = context.Materials.Where(x => materialIds.Contains(x.Id)).ToList();
+
         var response = new RecipeResponse()
         {
             Id = result.Id,
@@ -38,7 +41,8 @@ public class RecipesService : IRecipesService
                 Quantity = x.Quantity,
                 Preparation = x.Preparation,
                 IsOptional = x.IsOptional
-            }).ToList()
+            }).ToList(),
+            Materials = materials
         };
 
         return response;
@@ -69,7 +73,8 @@ public class RecipesService : IRecipesService
             Time = recipe.Time,
             Yield = recipe.Yield,
             Properties = recipe.Properties,
-            Ingredients = recipe.Ingredients
+            Ingredients = recipe.Ingredients,
+            Materials = recipe.Materials
         };
         context.Recipes.Add(i);
 
@@ -99,6 +104,7 @@ public class RecipesService : IRecipesService
         i.Time = recipe.Time;
         i.Yield = recipe.Yield;
         i.Ingredients = recipe.Ingredients;
+        i.Materials = recipe.Materials;
 
         await context.SaveChangesAsync();
 

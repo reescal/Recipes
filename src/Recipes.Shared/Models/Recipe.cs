@@ -21,6 +21,7 @@ public class RecipeCreate
     public int Time { get; set; }
     public IndexHashSet<RecipeProperties> Properties { get; set; }
     public List<IngredientRow> Ingredients { get; set; }
+    public List<RecipeMaterial> Materials { get; set; }
 }
 
 public class RecipeResponse : IEntity
@@ -32,6 +33,7 @@ public class RecipeResponse : IEntity
     public int Time { get; set; }
     public HashSet<RecipeProperties> Properties { get; set; }
     public List<IngredientRowResponse> Ingredients { get; set; }
+    public List<Material> Materials { get; set; }
 }
 
 public class RecipeProperties : IEntityProperties
@@ -65,6 +67,11 @@ public class Quantity
     public string Unit { get; set; }
 }
 
+public class RecipeMaterial
+{
+    public Guid MaterialId { get; set; }
+}
+
 public class RecipeValidator : AbstractValidator<RecipeCreate>
 {
     public RecipeValidator(DocsContext context)
@@ -77,6 +84,7 @@ public class RecipeValidator : AbstractValidator<RecipeCreate>
         RuleForEach(x => x.Properties).SetValidator(new RecipePropertiesValidator());
         RuleFor(x => x.Ingredients).Must(p => p != null && p.Any()).WithMessage(ValidationError.Required(nameof(RecipeCreate.Ingredients)));
         RuleForEach(x => x.Ingredients).SetValidator(new IngredientRowValidator(context));
+        RuleForEach(x => x.Materials).SetValidator(new RecipeMaterialValidator(context));
     }
 }
 
@@ -114,5 +122,13 @@ public class QuantityValidator : AbstractValidator<Quantity>
         RuleFor(p => p.Value).GreaterThan(0).WithMessage(ValidationError.Required(nameof(Quantity.Value)));
         RuleFor(p => p.Unit).NotEmpty().WithMessage(ValidationError.Required(nameof(Quantity.Unit)));
         RuleFor(p => p.Unit).MaximumLength(10).WithMessage(ValidationError.TooLong(nameof(Quantity.Unit)));
+    }
+}
+
+public class RecipeMaterialValidator :AbstractValidator<RecipeMaterial>
+{
+    public RecipeMaterialValidator(DocsContext context)
+    {
+        RuleFor(p => p.MaterialId).Must(p => context.Materials.Find(p) != null).WithMessage(p => NotFound(nameof(Material), p.MaterialId));
     }
 }
