@@ -9,15 +9,16 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
-using Recipes.Shared.Models;
-using Recipes.Api.Services;
-using Recipes.Api.Wrappers;
 using static Recipes.Shared.Constants.Constants;
 using static Recipes.Shared.Constants.ContentTypes;
 using static Recipes.Shared.Constants.HttpMethods;
 using static Recipes.Api.Wrappers.Helpers;
-using FluentValidation;
-using Recipes.Shared.Enums;
+using MediatR;
+using Recipes.Features.Ingredients.GetAll;
+using Recipes.Features.Ingredients.GetById;
+using Recipes.Data.Entities;
+using Recipes.Features.Ingredients.Create;
+using Recipes.Features.Ingredients.Update;
 
 namespace Recipes.Api;
 
@@ -25,24 +26,32 @@ public class Ingredients
 {
     private const string _name = nameof(Ingredients);
     private readonly ILogger<Ingredients> _logger;
-    private readonly IIngredientsService _ingredientService;
-    private readonly IValidator<IngredientCreate> _validator;
+    private readonly IMediator _mediator;
+    private readonly IHttpFunctionExecutor _httpFunctionExecutor;
 
-    public Ingredients(ILogger<Ingredients> log, IIngredientsService ingredientService, IValidator<IngredientCreate> validator)
+    public Ingredients(ILogger<Ingredients> log,
+        IMediator mediator,
+        IHttpFunctionExecutor httpFunctionExecutor)
     {
         _logger = log;
-        _ingredientService = ingredientService;
-        _validator = validator;
+        _mediator = mediator;
+        _httpFunctionExecutor = httpFunctionExecutor;
     }
 
     [FunctionName(nameof(GetIngredients))]
     [OpenApiOperation(operationId: nameof(GetIngredients), tags: new[] { _name })]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: json, bodyType: typeof(IEnumerable<Ingredient>), Description = "The OK response")]
-    public IActionResult GetIngredients(
+    public async Task<IActionResult> GetIngredients(
         [HttpTrigger(AuthorizationLevel.Anonymous, get,  Route = _name)] HttpRequest req)
     {
-        var ingredients = _ingredientService.Get();
-        return new OkObjectResult(ingredients);
+        _logger.LogInformation($"{nameof(GetIngredients)} function triggered.");
+
+        return await _httpFunctionExecutor.ExecuteAsync(async () =>
+        {
+            var response = await _mediator.Send(new IngredientsGetAllRequest());
+
+            return new OkObjectResult(response);
+        });
     }
 
     [FunctionName(nameof(GetIngredient))]
@@ -52,99 +61,52 @@ public class Ingredients
     public async Task<IActionResult> GetIngredient(
         [HttpTrigger(AuthorizationLevel.Anonymous, get,  Route = _name + "/{id:Guid}")] HttpRequest req, Guid id)
     {
-        try
-        {
-            var ingredient = await _ingredientService.GetAsync(id);
-            return new OkObjectResult(ingredient);
-        }
-        catch (ApiException ex)
-        {
-            return ex.Exception;
-        }
-    }
+        _logger.LogInformation($"{nameof(GetIngredient)} function triggered.");
 
-    [FunctionName(nameof(GetIngredientNames))]
-    [OpenApiOperation(operationId: nameof(GetIngredientNames), tags: new[] { _name })]
-    [OpenApiParameter(name: langId, In = ParameterLocation.Query, Required = false, Type = typeof(Lang), Description = "The **Lang Id** parameter")]
-    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: json, bodyType: typeof(IEnumerable<ComplexEntity>), Description = "The OK response")]
-    public IActionResult GetIngredientNames(
-        [HttpTrigger(AuthorizationLevel.Anonymous, get, Route = _name + "/Names")] HttpRequest req)
-    {
-        try
+        return await _httpFunctionExecutor.ExecuteAsync(async () =>
         {
-            var lang = CheckQueryLangId(req.Query);
+            var response = await _mediator.Send(new IngredientGetRequest { Id = id });
 
-            var ingredients = _ingredientService.GetNames(lang);
-
-            return new OkObjectResult(ingredients);
-        }
-        catch (ApiException ex)
-        {
-            return ex.Exception;
-        }
-    }
-
-    [FunctionName(nameof(GetIngredientTypes))]
-    [OpenApiOperation(operationId: nameof(GetIngredientTypes), tags: new[] { _name })]
-    [OpenApiParameter(name: langId, In = ParameterLocation.Query, Required = false, Type = typeof(int), Description = "The **Lang Id** parameter")]
-    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: json, bodyType: typeof(IEnumerable<EntityTypes>), Description = "The OK response")]
-    public IActionResult GetIngredientTypes(
-        [HttpTrigger(AuthorizationLevel.Anonymous, get, Route = _name + "/Types")] HttpRequest req)
-    {
-        try
-        {
-            var lang = CheckQueryLangId(req.Query);
-
-            var ingredients = _ingredientService.GetTypes(lang);
-
-            return new OkObjectResult(ingredients);
-        }
-        catch (ApiException ex)
-        {
-            return ex.Exception;
-        }
+            return new OkObjectResult(response);
+        });
     }
 
     [FunctionName(nameof(CreateIngredient))]
     [OpenApiOperation(operationId: nameof(CreateIngredient), tags: new[] { _name })]
-    [OpenApiRequestBody(contentType: json, bodyType: typeof(IngredientCreate), Description = nameof(Ingredient), Required = true)]
-    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: textPlain, bodyType: typeof(string), Description = "The OK response")]
+    [OpenApiRequestBody(contentType: json, bodyType: typeof(IngredientCreateRequest), Description = nameof(Ingredient), Required = true)]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: textPlain, bodyType: typeof(Guid), Description = "The OK response")]
     public async Task<IActionResult> CreateIngredient(
         [HttpTrigger(AuthorizationLevel.Anonymous, post, Route = _name)] HttpRequest req)
     {
-        var input = await DeserializeAsync<IngredientCreate>(req);
+        _logger.LogInformation($"{nameof(CreateIngredient)} function triggered.");
 
-        var result = await _validator.ValidateAsync(input);
-        if (!result.IsValid)
-            return new BadRequestObjectResult(result.Errors);
+        return await _httpFunctionExecutor.ExecuteAsync(async () =>
+        {
+            var input = await DeserializeAsync<IngredientCreateRequest>(req);
 
-        var id = await _ingredientService.InsertAsync(input);
-        return new OkObjectResult(id);
+            var response = await _mediator.Send(input);
+
+            return new OkObjectResult(response);
+        });
     }
 
     [FunctionName(nameof(UpdateIngredient))]
     [OpenApiOperation(operationId: nameof(UpdateIngredient), tags: new[] { _name })]
-    [OpenApiParameter(name: id, In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The **Id** parameter")]
-    [OpenApiRequestBody(contentType: json, bodyType: typeof(IngredientCreate), Description = nameof(Ingredient), Required = true)]
+    [OpenApiRequestBody(contentType: json, bodyType: typeof(IngredientUpdateRequest), Description = nameof(Ingredient), Required = true)]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: json, bodyType: typeof(Ingredient), Description = "The OK response")]
     public async Task<IActionResult> UpdateIngredient(
-        [HttpTrigger(AuthorizationLevel.Anonymous, put, Route = _name + "/{id:Guid}")] HttpRequest req, Guid id)
+        [HttpTrigger(AuthorizationLevel.Anonymous, put, Route = _name)] HttpRequest req)
     {
-        var input = await DeserializeAsync<IngredientCreate>(req);
+        _logger.LogInformation($"{nameof(UpdateIngredient)} function triggered.");
 
-        var result = await _validator.ValidateAsync(input);
-        if (!result.IsValid)
-            return new BadRequestObjectResult(result.Errors);
+        return await _httpFunctionExecutor.ExecuteAsync(async () =>
+        {
+            var input = await DeserializeAsync<IngredientUpdateRequest>(req);
 
-        try
-        {
-            var obj = await _ingredientService.UpdateAsync(id, input);
-            return new OkObjectResult(obj);
-        }
-        catch (ApiException ex)
-        {
-            return ex.Exception;
-        }
+            var response = await _mediator.Send(input);
+
+            return new OkObjectResult(response);
+        });
     }
 }
 

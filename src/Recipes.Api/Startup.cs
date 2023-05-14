@@ -2,13 +2,14 @@
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Recipes.Shared.Entities;
-using Recipes.Api.Services;
+using Recipes.Data;
 using Recipes.Api;
-using FluentValidation;
-using Recipes.Shared.Models;
 using static Recipes.Shared.Helpers.Helpers.Configuration;
 using Microsoft.EntityFrameworkCore;
+using Recipes.Shared.Constants;
+using Recipes.Features.Ingredients.GetById;
+using MediatR;
+using FluentValidation;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 
@@ -25,6 +26,12 @@ public class Startup : FunctionsStartup
     public override void Configure(IFunctionsHostBuilder builder)
     {
         builder.Services.AddTransient<IConfiguration>(o => Configuration);
+        builder.Services.AddSingleton(c => 
+            new CosmosConfig
+            { 
+                ContainerName = Configuration[DBConstants.containerName]
+                    ?? Configuration.GetSection("Values").GetValue<string>(DBConstants.containerName)
+            });
         builder.Services.AddDbContextFactory<DocsContext>(
            (DbContextOptionsBuilder opts) =>
            {
@@ -32,12 +39,10 @@ public class Startup : FunctionsStartup
                opts.UseCosmos(cosmosConfig.ConnectionString, cosmosConfig.DatabaseName);
            });
 
-        builder.Services.AddScoped<IValidator<IngredientCreate>, IngredientValidator>();
-        builder.Services.AddScoped<IValidator<MaterialCreate>, MaterialValidator>();
-        builder.Services.AddScoped<IValidator<RecipeCreate>, RecipeValidator>();
-
-        builder.Services.AddScoped<IIngredientsService, IngredientsService>();
-        builder.Services.AddScoped<IMaterialsService, MaterialsService>();
-        builder.Services.AddScoped<IRecipesService, RecipesService>();
+        builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(IngredientGetResponse).Assembly));
+        builder.Services.AddAutoMapper(typeof(IngredientGetResponse).Assembly);
+        builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+        builder.Services.AddSingleton<IHttpFunctionExecutor, HttpFunctionExecutor>();
+        builder.Services.AddValidatorsFromAssembly(typeof(IngredientGetResponse).Assembly);
     }
 }

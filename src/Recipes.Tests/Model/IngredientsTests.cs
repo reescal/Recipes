@@ -1,18 +1,19 @@
-﻿using FluentValidation;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using static Recipes.Tests.Testing;
 using Recipes.Api;
-using Recipes.Api.Services;
 using Recipes.Shared.Models;
 using Shouldly;
 using Microsoft.AspNetCore.Http;
 using Moq;
-using Microsoft.Extensions.Primitives;
 using FluentValidation.Results;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
-using static Recipes.Shared.Constants.Constants;
 using Recipes.Shared.Constants;
+using MediatR;
+using Recipes.Data.Entities;
+using Recipes.Features.Ingredients.Create;
+using Recipes.Features.Ingredients.Update;
+using Recipes.Features.Ingredients.GetById;
 
 namespace Recipes.Tests.Model;
 
@@ -23,19 +24,19 @@ public class IngredientsTests
     public IngredientsTests()
     {
         _sut = new Ingredients(Provider.GetRequiredService<ILogger<Ingredients>>(),
-            Provider.GetRequiredService<IIngredientsService>(),
-            Provider.GetRequiredService<IValidator<IngredientCreate>>());
+            Provider.GetRequiredService<IMediator>(),
+            Provider.GetRequiredService<IHttpFunctionExecutor>());
     }
 
-    public void ShouldGetIngredients()
+    public async Task ShouldGetIngredients()
     {
         var req = new Mock<HttpRequest>();
 
-        var result = _sut.GetIngredients(req.Object);
+        var result = await _sut.GetIngredients(req.Object);
 
         result.ShouldBeAssignableTo<OkObjectResult>();
         var ingredients = ((OkObjectResult)result).Value;
-        ingredients.ShouldBeAssignableTo<IEnumerable<Ingredient>>();
+        ingredients.ShouldBeAssignableTo<IEnumerable<IngredientGetResponse>>();
     }
 
     public async Task ShouldGetIngredient()
@@ -51,102 +52,13 @@ public class IngredientsTests
 
         result.ShouldBeAssignableTo<OkObjectResult>();
         var ingredientResult = ((OkObjectResult)result).Value;
-        ingredientResult.ShouldBeAssignableTo<Ingredient>();
-        ingredient.Id.ShouldBe((ingredientResult as Ingredient)!.Id);
-    }
-
-    public void ShouldGetIngredientNames()
-    {
-        var req = new Mock<HttpRequest>();
-        req.Setup(x => x.Query).Returns(new QueryCollection());
-
-        var result = _sut.GetIngredientNames(req.Object);
-
-        result.ShouldBeAssignableTo<OkObjectResult>();
-
-        var qC = new QueryCollection(
-            new Dictionary<string, StringValues>()
-            {
-                {
-                    langId,
-                    new StringValues("0")
-                }
-            });
-        req.Setup(x => x.Query).Returns(qC);
-
-        result = _sut.GetIngredientNames(req.Object);
-
-        result.ShouldBeAssignableTo<BadRequestObjectResult>();
-
-        qC = new QueryCollection(
-            new Dictionary<string, StringValues>()
-            {
-                {
-                    langId,
-                    new StringValues(((int)Shared.Enums.Lang.English).ToString())
-                }
-            });
-        req.Setup(x => x.Query).Returns(qC);
-
-        result = _sut.GetIngredientNames(req.Object);
-
-        result.ShouldBeAssignableTo<OkObjectResult>();
-        var entitiesResult = ((OkObjectResult)result).Value;
-        entitiesResult.ShouldBeAssignableTo<IEnumerable<ComplexEntity>>();
-        var complexEntities = entitiesResult as IEnumerable<ComplexEntity>;
-        complexEntities!
-            .All(x => x.Properties
-                        .All(y => y.LangId == Shared.Enums.Lang.English))
-            .ShouldBeTrue();
-    }
-
-    public void ShouldGetIngredientTypes()
-    {
-        var req = new Mock<HttpRequest>();
-        req.Setup(x => x.Query).Returns(new QueryCollection());
-
-        var result = _sut.GetIngredientTypes(req.Object);
-
-        result.ShouldBeAssignableTo<OkObjectResult>();
-
-        var qC = new QueryCollection(
-            new Dictionary<string, StringValues>()
-            {
-                {
-                    langId,
-                    new StringValues("0")
-                }
-            });
-        req.Setup(x => x.Query).Returns(qC);
-
-        result = _sut.GetIngredientTypes(req.Object);
-
-        result.ShouldBeAssignableTo<BadRequestObjectResult>();
-
-        qC = new QueryCollection(
-            new Dictionary<string, StringValues>()
-            {
-                {
-                    langId,
-                    new StringValues(((int)Shared.Enums.Lang.English).ToString())
-                }
-            });
-        req.Setup(x => x.Query).Returns(qC);
-
-        result = _sut.GetIngredientTypes(req.Object);
-
-        result.ShouldBeAssignableTo<OkObjectResult>();
-        var typesResult = ((OkObjectResult)result).Value;
-        typesResult.ShouldBeAssignableTo<HashSet<EntityTypes>>();
-        var ingredientTypes = typesResult as HashSet<EntityTypes>;
-        ingredientTypes!
-            .All(x => x.LangId == Shared.Enums.Lang.English)
-            .ShouldBeTrue();
+        ingredientResult.ShouldBeAssignableTo<IngredientGetResponse>();
+        ingredient.Id.ShouldBe((ingredientResult as IngredientGetResponse)!.Id);
     }
 
     public async Task ShouldCreateIngredient()
     {
-        var ingredient = new IngredientCreate();
+        var ingredient = new IngredientCreateRequest();
         var req = CreateMockRequest(ingredient);
 
         var result = await _sut.CreateIngredient(req.Object);
@@ -156,7 +68,7 @@ public class IngredientsTests
         var validationFailures = resultObject as List<ValidationFailure>;
         validationFailures!.Count.ShouldBe(2);
         validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required("Image link"));
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(IngredientCreate.Properties)));
+        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(IngredientCreateRequest.Properties)));
 
         ingredient.Image = "http://invalid/link";
         req = CreateMockRequest(ingredient);
@@ -177,7 +89,7 @@ public class IngredientsTests
         resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
         validationFailures = resultObject as List<ValidationFailure>;
         validationFailures!.Count.ShouldBe(1);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(IngredientCreate.Properties)));
+        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(IngredientCreateRequest.Properties)));
 
         ingredient.Properties = new() { new() };
         req = CreateMockRequest(ingredient);
@@ -282,12 +194,10 @@ public class IngredientsTests
         result = await _sut.CreateIngredient(req.Object);
         result.ShouldBeAssignableTo<OkObjectResult>();
         resultObject = ((OkObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<string>();
-        var parsed = Guid.TryParse(resultObject as string, out var guid);
-        parsed.ShouldBeTrue();
+        resultObject.ShouldBeAssignableTo<Guid>();
 
         req = new Mock<HttpRequest>();
-        result = await _sut.GetIngredient(req.Object, guid);
+        result = await _sut.GetIngredient(req.Object, (Guid)resultObject);
         result.ShouldNotBeAssignableTo<NotFoundObjectResult>();
     }
 
@@ -295,27 +205,29 @@ public class IngredientsTests
     {
         var ingredient = await CreateIngredient();
 
-        var ingredientUpdate = new IngredientCreate()
+        var ingredientUpdate = new IngredientUpdateRequest()
         {
+            Id = Guid.NewGuid(),
             Image = ingredient.Image,
             Properties = ingredient.Properties
         };
         var req = CreateMockRequest(ingredientUpdate);
 
-        var result = await _sut.UpdateIngredient(req.Object, Guid.NewGuid());
+        var result = await _sut.UpdateIngredient(req.Object);
 
         result.ShouldBeAssignableTo<NotFoundObjectResult>();
 
+        ingredientUpdate.Id = ingredient.Id;
         ingredientUpdate.Image = ingredient.Image + "_updated.png";
 
         req = CreateMockRequest(ingredientUpdate);
 
-        result = await _sut.UpdateIngredient(req.Object, ingredient.Id);
+        result = await _sut.UpdateIngredient(req.Object);
 
         result.ShouldBeAssignableTo<OkObjectResult>();
         var ingredientResult = ((OkObjectResult)result).Value;
-        ingredientResult.ShouldBeAssignableTo<Ingredient>();
-        (ingredientResult as Ingredient)!.Image.ShouldNotBe(ingredient.Image);
-        (ingredientResult as Ingredient)!.Image.ShouldBe(ingredientUpdate.Image);
+        ingredientResult.ShouldBeAssignableTo<IngredientGetResponse>();
+        (ingredientResult as IngredientGetResponse)!.Image.ShouldNotBe(ingredient.Image);
+        (ingredientResult as IngredientGetResponse)!.Image.ShouldBe(ingredientUpdate.Image);
     }
 }

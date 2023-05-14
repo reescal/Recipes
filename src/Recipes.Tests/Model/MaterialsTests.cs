@@ -1,18 +1,19 @@
-﻿using FluentValidation;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using static Recipes.Tests.Testing;
 using Recipes.Api;
-using Recipes.Api.Services;
 using Recipes.Shared.Models;
 using Shouldly;
 using Microsoft.AspNetCore.Http;
 using Moq;
-using Microsoft.Extensions.Primitives;
 using FluentValidation.Results;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
-using static Recipes.Shared.Constants.Constants;
 using Recipes.Shared.Constants;
+using MediatR;
+using Recipes.Data.Entities;
+using Recipes.Features.Materials.Create;
+using Recipes.Features.Materials.Update;
+using Recipes.Features.Materials.GetById;
 
 namespace Recipes.Tests.Model;
 
@@ -23,19 +24,19 @@ public class MaterialsTests
     public MaterialsTests()
     {
         _sut = new Materials(Provider.GetRequiredService<ILogger<Materials>>(),
-            Provider.GetRequiredService<IMaterialsService>(),
-            Provider.GetRequiredService<IValidator<MaterialCreate>>());
+            Provider.GetRequiredService<IMediator>(),
+            Provider.GetRequiredService<IHttpFunctionExecutor>());
     }
 
-    public void ShouldGetMaterials()
+    public async Task ShouldGetMaterials()
     {
         var req = new Mock<HttpRequest>();
 
-        var result = _sut.GetMaterials(req.Object);
+        var result = await _sut.GetMaterials(req.Object);
 
         result.ShouldBeAssignableTo<OkObjectResult>();
         var materials = ((OkObjectResult)result).Value;
-        materials.ShouldBeAssignableTo<IEnumerable<Material>>();
+        materials.ShouldBeAssignableTo<IEnumerable<MaterialGetResponse>>();
     }
 
     public async Task ShouldGetMaterial()
@@ -50,102 +51,13 @@ public class MaterialsTests
         result = await _sut.GetMaterial(req.Object, material.Id);
         result.ShouldBeAssignableTo<OkObjectResult>();
         var materialResult = ((OkObjectResult)result).Value;
-        materialResult.ShouldBeAssignableTo<Material>();
-        material.Id.ShouldBe((materialResult as Material)!.Id);
-    }
-
-    public void ShouldGetMaterialNames()
-    {
-        var req = new Mock<HttpRequest>();
-        req.Setup(x => x.Query).Returns(new QueryCollection());
-
-        var result = _sut.GetMaterialNames(req.Object);
-
-        result.ShouldBeAssignableTo<OkObjectResult>();
-
-        var qC = new QueryCollection(
-            new Dictionary<string, StringValues>()
-            {
-                {
-                    langId,
-                    new StringValues("0")
-                }
-            });
-        req.Setup(x => x.Query).Returns(qC);
-
-        result = _sut.GetMaterialNames(req.Object);
-
-        result.ShouldBeAssignableTo<BadRequestObjectResult>();
-
-        qC = new QueryCollection(
-            new Dictionary<string, StringValues>()
-            {
-                {
-                    langId,
-                    new StringValues(((int)Shared.Enums.Lang.English).ToString())
-                }
-            });
-        req.Setup(x => x.Query).Returns(qC);
-
-        result = _sut.GetMaterialNames(req.Object);
-
-        result.ShouldBeAssignableTo<OkObjectResult>();
-        var entitiesResult = ((OkObjectResult)result).Value;
-        entitiesResult.ShouldBeAssignableTo<IEnumerable<ComplexEntity>>();
-        var complexEntities = entitiesResult as IEnumerable<ComplexEntity>;
-        complexEntities!
-            .All(x => x.Properties
-                        .All(y => y.LangId == Shared.Enums.Lang.English))
-            .ShouldBeTrue();
-    }
-
-    public void ShouldGetIngredientTypes()
-    {
-        var req = new Mock<HttpRequest>();
-        req.Setup(x => x.Query).Returns(new QueryCollection());
-
-        var result = _sut.GetMaterialTypes(req.Object);
-
-        result.ShouldBeAssignableTo<OkObjectResult>();
-
-        var qC = new QueryCollection(
-            new Dictionary<string, StringValues>()
-            {
-                {
-                    langId,
-                    new StringValues("0")
-                }
-            });
-        req.Setup(x => x.Query).Returns(qC);
-
-        result = _sut.GetMaterialTypes(req.Object);
-
-        result.ShouldBeAssignableTo<BadRequestObjectResult>();
-
-        qC = new QueryCollection(
-            new Dictionary<string, StringValues>()
-            {
-                {
-                    langId,
-                    new StringValues(((int)Shared.Enums.Lang.English).ToString())
-                }
-            });
-        req.Setup(x => x.Query).Returns(qC);
-
-        result = _sut.GetMaterialTypes(req.Object);
-
-        result.ShouldBeAssignableTo<OkObjectResult>();
-        var typesResult = ((OkObjectResult)result).Value;
-        typesResult.ShouldBeAssignableTo<HashSet<EntityTypes>>();
-        var ingredientTypes = typesResult as HashSet<EntityTypes>;
-        ingredientTypes!
-            .All(x => x.LangId == Shared.Enums.Lang.English)
-            .ShouldBeTrue();
+        materialResult.ShouldBeAssignableTo<MaterialGetResponse>();
+        material.Id.ShouldBe((materialResult as MaterialGetResponse)!.Id);
     }
 
     public async Task ShouldCreateMaterial()
     {
-        var material = new MaterialCreate();
+        var material = new MaterialCreateRequest();
         var req = CreateMockRequest(material);
 
         var result = await _sut.CreateMaterial(req.Object);
@@ -155,7 +67,7 @@ public class MaterialsTests
         var validationFailures = resultObject as List<ValidationFailure>;
         validationFailures!.Count.ShouldBe(2);
         validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required("Image link"));
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(MaterialCreate.Properties)));
+        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(MaterialCreateRequest.Properties)));
 
         material.Image = "http://invalid/link";
         req = CreateMockRequest(material);
@@ -176,7 +88,7 @@ public class MaterialsTests
         resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
         validationFailures = resultObject as List<ValidationFailure>;
         validationFailures!.Count.ShouldBe(1);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(MaterialCreate.Properties)));
+        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(MaterialCreateRequest.Properties)));
 
         material.Properties = new() { new() };
         req = CreateMockRequest(material);
@@ -281,12 +193,10 @@ public class MaterialsTests
         result = await _sut.CreateMaterial(req.Object);
         result.ShouldBeAssignableTo<OkObjectResult>();
         resultObject = ((OkObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<string>();
-        var parsed = Guid.TryParse(resultObject as string, out var guid);
-        parsed.ShouldBeTrue();
+        resultObject.ShouldBeAssignableTo<Guid>();
 
         req = new Mock<HttpRequest>();
-        result = await _sut.GetMaterial(req.Object, guid);
+        result = await _sut.GetMaterial(req.Object, (Guid)resultObject);
         result.ShouldNotBeAssignableTo<NotFoundObjectResult>();
     }
 
@@ -294,27 +204,29 @@ public class MaterialsTests
     {
         var material = await CreateMaterial();
 
-        var materialUpdate = new MaterialCreate()
+        var materialUpdate = new MaterialUpdateRequest()
         {
+            Id = Guid.NewGuid(),
             Image = material.Image,
             Properties = material.Properties
         };
         var req = CreateMockRequest(materialUpdate);
 
-        var result = await _sut.UpdateMaterial(req.Object, Guid.NewGuid());
+        var result = await _sut.UpdateMaterial(req.Object);
 
         result.ShouldBeAssignableTo<NotFoundObjectResult>();
 
+        materialUpdate.Id = material.Id;
         materialUpdate.Image = material.Image + "_updated.png";
 
         req = CreateMockRequest(materialUpdate);
 
-        result = await _sut.UpdateMaterial(req.Object, material.Id);
+        result = await _sut.UpdateMaterial(req.Object);
 
         result.ShouldBeAssignableTo<OkObjectResult>();
         var materialResult = ((OkObjectResult)result).Value;
-        materialResult.ShouldBeAssignableTo<Material>();
-        (materialResult as Material)!.Image.ShouldNotBe(material.Image);
-        (materialResult as Material)!.Image.ShouldBe(materialUpdate.Image);
+        materialResult.ShouldBeAssignableTo<MaterialGetResponse>();
+        (materialResult as MaterialGetResponse)!.Image.ShouldNotBe(material.Image);
+        (materialResult as MaterialGetResponse)!.Image.ShouldBe(materialUpdate.Image);
     }
 }

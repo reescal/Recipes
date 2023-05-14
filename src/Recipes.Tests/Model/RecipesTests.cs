@@ -1,17 +1,21 @@
-﻿using FluentValidation;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using static Recipes.Tests.Testing;
-using Recipes.Api.Services;
 using Recipes.Shared.Models;
 using Shouldly;
 using Microsoft.AspNetCore.Http;
 using Moq;
-using Microsoft.Extensions.Primitives;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using FluentValidation.Results;
-using static Recipes.Shared.Constants.Constants;
 using Recipes.Shared.Constants;
+using MediatR;
+using Recipes.Api;
+using Recipes.Features.Recipes.GetById;
+using Recipes.Features.Recipes.Create;
+using Recipes.Data.Entities;
+using Recipes.Features.Recipes.Update;
+using Recipes.Features.Recipes.GetByIngredients;
+using static Recipes.Shared.Constants.Responses;
 
 namespace Recipes.Tests.Model;
 
@@ -22,14 +26,13 @@ public class RecipesTests
     public RecipesTests()
     {
         _sut = new Api.Recipes(Provider.GetRequiredService<ILogger<Api.Recipes>>(),
-            Provider.GetRequiredService<IRecipesService>(),
-            Provider.GetRequiredService<IValidator<RecipeCreate>>());
+            Provider.GetRequiredService<IMediator>(),
+            Provider.GetRequiredService<IHttpFunctionExecutor>());
     }
 
     public async Task ShouldGetRecipe()
     {
         var req = new Mock<HttpRequest>();
-        req.Setup(x => x.Query).Returns(new QueryCollection());
 
         var recipe = await CreateRecipe();
 
@@ -41,54 +44,8 @@ public class RecipesTests
 
         result.ShouldBeAssignableTo<OkObjectResult>();
         var oORV = ((OkObjectResult)result).Value;
-        oORV.ShouldBeAssignableTo<RecipeResponse>();
-        recipe.Id.ShouldBe((oORV as RecipeResponse).Id);
-    }
-
-    public void ShouldGetRecipeNames()
-    {
-        var req = new Mock<HttpRequest>();
-        req.Setup(x => x.Query).Returns(new QueryCollection());
-
-        var result = _sut.GetRecipeNames(req.Object);
-
-        result.ShouldBeAssignableTo<OkObjectResult>();
-
-        var qC = new QueryCollection(
-            new Dictionary<string, StringValues>()
-            {
-                {
-                    langId,
-                    new StringValues("0")
-                }
-            });
-        req.Setup(x => x.Query).Returns(qC);
-
-        result = _sut.GetRecipeNames(req.Object);
-
-        result.ShouldBeAssignableTo<BadRequestObjectResult>();
-
-        qC = new QueryCollection(
-            new Dictionary<string, StringValues>()
-            {
-                {
-                    langId,
-                    new StringValues(((int)Shared.Enums.Lang.Spanish).ToString())
-                }
-            });
-
-        req.Setup(x => x.Query).Returns(qC);
-
-        result = _sut.GetRecipeNames(req.Object);
-
-        result.ShouldBeAssignableTo<OkObjectResult>();
-        var entitiesResult = ((OkObjectResult)result).Value;
-        entitiesResult.ShouldBeAssignableTo<IEnumerable<ComplexEntity>>();
-        var complexEntities = entitiesResult as IEnumerable<ComplexEntity>;
-        complexEntities!
-            .All(x => x.Properties
-                        .All(y => y.LangId == Shared.Enums.Lang.Spanish))
-            .ShouldBeTrue();
+        oORV.ShouldBeAssignableTo<RecipeGetResponse>();
+        recipe.Id.ShouldBe((oORV as RecipeGetResponse)!.Id);
     }
 
     public async Task ShouldGetRecipesByIngredients()
@@ -96,20 +53,22 @@ public class RecipesTests
         var ingredients = new List<Guid>();
         var req = CreateMockRequest(ingredients.ToArray());
         var result = await _sut.GetRecipesByIngredients(req.Object);
-        result.ShouldBeAssignableTo<OkObjectResult>();
-        var entitiesResult = ((OkObjectResult)result).Value;
-        entitiesResult.ShouldBeAssignableTo<IEnumerable<ComplexEntity>>();
-        var entities = (entitiesResult as IEnumerable<ComplexEntity>);
-        entities.ShouldBeEmpty();
+        result.ShouldBeAssignableTo<BadRequestObjectResult>();
+        var resultObject = ((BadRequestObjectResult)result).Value;
+        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
+        var validationFailures = resultObject as List<ValidationFailure>;
+        validationFailures!.Count.ShouldBe(1);
+        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(RecipeGetByIngredientsRequest.Ingredients)));
 
         ingredients = new List<Guid>() { Guid.NewGuid() };
         req = CreateMockRequest(ingredients.ToArray());
         result = await _sut.GetRecipesByIngredients(req.Object);
-        result.ShouldBeAssignableTo<OkObjectResult>();
-        entitiesResult = ((OkObjectResult)result).Value;
-        entitiesResult.ShouldBeAssignableTo<IEnumerable<ComplexEntity>>();
-        entities = (entitiesResult as IEnumerable<ComplexEntity>);
-        entities.ShouldBeEmpty();
+        result.ShouldBeAssignableTo<BadRequestObjectResult>();
+        resultObject = ((BadRequestObjectResult)result).Value;
+        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
+        validationFailures = resultObject as List<ValidationFailure>;
+        validationFailures!.Count.ShouldBe(1);
+        validationFailures.Select(x => x.ErrorMessage).ShouldContain(NotFound(nameof(Ingredient)));
 
         var recipe = await CreateRecipe();
 
@@ -118,14 +77,14 @@ public class RecipesTests
         result = await _sut.GetRecipesByIngredients(req.Object);
         result.ShouldBeAssignableTo<OkObjectResult>();
         var oORV = ((OkObjectResult)result).Value;
-        oORV.ShouldBeAssignableTo<IEnumerable<ComplexEntity>>();
-        entities = (oORV as IEnumerable<ComplexEntity>);
+        oORV.ShouldBeAssignableTo<IEnumerable<RecipeGetResponse>>();
+        var entities = (oORV as IEnumerable<RecipeGetResponse>);
         entities!.Select(x => x.Id).ShouldContain(recipe.Id);
     }
 
     public async Task ShouldCreateRecipe()
     {
-        var recipe = new RecipeCreate();
+        var recipe = new RecipeCreateRequest();
         var req = CreateMockRequest(recipe);
 
         var result = await _sut.CreateRecipe(req.Object);
@@ -135,10 +94,10 @@ public class RecipesTests
         var validationFailures = resultObject as List<ValidationFailure>;
         validationFailures!.Count.ShouldBe(5);
         validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required("Image link"));
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(RecipeCreate.Yield)));
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.InclusiveBetween(nameof(RecipeCreate.Time), 5, 2880));
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(RecipeCreate.Properties)));
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(RecipeCreate.Ingredients)));
+        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(RecipeCreateRequest.Yield)));
+        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.InclusiveBetween(nameof(RecipeCreateRequest.Time), 5, 2880));
+        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(RecipeCreateRequest.Properties)));
+        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(RecipeCreateRequest.Ingredients)));
 
         recipe.Image = "http://invalid/link";
         req = CreateMockRequest(recipe);
@@ -160,7 +119,7 @@ public class RecipesTests
         resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
         validationFailures = resultObject as List<ValidationFailure>;
         validationFailures!.Count.ShouldBe(3);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.InclusiveBetween(nameof(RecipeCreate.Time), 5, 2880));
+        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.InclusiveBetween(nameof(RecipeCreateRequest.Time), 5, 2880));
 
         recipe.Time = 30;
         recipe.Properties = new();
@@ -171,7 +130,7 @@ public class RecipesTests
         resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
         validationFailures = resultObject as List<ValidationFailure>;
         validationFailures!.Count.ShouldBe(2);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(RecipeCreate.Properties)));
+        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(RecipeCreateRequest.Properties)));
 
         recipe.Properties = new() { new() };
         req = CreateMockRequest(recipe);
@@ -280,7 +239,7 @@ public class RecipesTests
         resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
         validationFailures = resultObject as List<ValidationFailure>;
         validationFailures!.Count.ShouldBe(1);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(RecipeCreate.Ingredients)));
+        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(RecipeCreateRequest.Ingredients)));
 
         recipe.Ingredients = new() { new() };
         req = CreateMockRequest(recipe);
@@ -367,12 +326,10 @@ public class RecipesTests
         result = await _sut.CreateRecipe(req.Object);
         result.ShouldBeAssignableTo<OkObjectResult>();
         resultObject = ((OkObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<string>();
-        var parsed = Guid.TryParse(resultObject as string, out var guid);
-        parsed.ShouldBeTrue();
+        resultObject.ShouldBeAssignableTo<Guid>();
 
         req = new Mock<HttpRequest>();
-        result = await _sut.GetRecipe(req.Object, guid);
+        result = await _sut.GetRecipe(req.Object, (Guid)resultObject);
         result.ShouldNotBeAssignableTo<NotFoundObjectResult>();
     }
 
@@ -380,8 +337,9 @@ public class RecipesTests
     {
         var recipe = await CreateRecipe();
 
-        var recipeUpdate = new RecipeCreate()
+        var recipeUpdate = new RecipeUpdateRequest()
         {
+            Id = Guid.NewGuid(),
             Image = recipe.Image,
             Yield = recipe.Yield,
             Time = recipe.Time,
@@ -390,16 +348,17 @@ public class RecipesTests
         };
         var req = CreateMockRequest(recipeUpdate);
 
-        var result = await _sut.UpdateRecipe(req.Object, Guid.NewGuid());
+        var result = await _sut.UpdateRecipe(req.Object);
         result.ShouldBeAssignableTo<NotFoundObjectResult>();
 
+        recipeUpdate.Id = recipe.Id;
         recipeUpdate.Image = recipe.Image + "_updated.png";
         req = CreateMockRequest(recipeUpdate);
-        result = await _sut.UpdateRecipe(req.Object, recipe.Id);
+        result = await _sut.UpdateRecipe(req.Object);
         result.ShouldBeAssignableTo<OkObjectResult>();
         var recipeResult = ((OkObjectResult)result).Value;
-        recipeResult.ShouldBeAssignableTo<Recipe>();
-        (recipeResult as Recipe)!.Image.ShouldNotBe(recipe.Image);
-        (recipeResult as Recipe)!.Image.ShouldBe(recipeUpdate.Image);
+        recipeResult.ShouldBeAssignableTo<RecipeGetResponse>();
+        (recipeResult as RecipeGetResponse)!.Image.ShouldNotBe(recipe.Image);
+        (recipeResult as RecipeGetResponse)!.Image.ShouldBe(recipeUpdate.Image);
     }
 }

@@ -1,5 +1,7 @@
 ﻿using System.Net.Http.Json;
-using Recipes.Shared.Models;
+using Recipes.Features.Ingredients.Create;
+using Recipes.Features.Ingredients.GetById;
+using Recipes.Features.Ingredients.Update;
 
 namespace Recipes.Web.Services;
 
@@ -13,50 +15,33 @@ public class IngredientsService : IIngredientsService
         _httpClient = clientFactory.CreateClient("API");
     }
 
-    private IEnumerable<Ingredient> Ingredients;
-    private HashSet<EntityTypes> IngredientTypes;
+    private IEnumerable<IngredientGetResponse> Ingredients;
 
-    public async Task<IEnumerable<Ingredient>> Get()
+    public async Task<IEnumerable<IngredientGetResponse>> Get()
     {
-        Ingredients ??= await _httpClient.GetFromJsonAsync<IEnumerable<Ingredient>>(api);
+        Ingredients ??= await _httpClient.GetFromJsonAsync<IEnumerable<IngredientGetResponse>>(api);
         return Ingredients;
     }
 
-    public async Task<Ingredient> Get(Guid id) => await _httpClient.GetFromJsonAsync<Ingredient>(api + id);
+    public async Task<IngredientGetResponse> Get(Guid id) => await _httpClient.GetFromJsonAsync<IngredientGetResponse>(api + id);
 
-    public async Task<HashSet<EntityTypes>> GetTypes()
-    {
-        IngredientTypes ??= await _httpClient.GetFromJsonAsync<HashSet<EntityTypes>>(api + "Types");
-        return IngredientTypes;
-    }
-
-    public async Task<string> Add(IngredientCreate ingredient)
+    public async Task<string> Add(IngredientCreateRequest ingredient)
     {
         var response = await _httpClient.PostAsJsonAsync(api, ingredient);
         var result = await response.Content.ReadAsStringAsync();
         if (response.IsSuccessStatusCode)
-        {
-            Ingredients = Ingredients.Append(new Ingredient() { Id = Guid.Parse(result), Image = ingredient.Image, Properties = ingredient.Properties });
-            foreach (var i in ingredient.Properties)
-            {
-                IngredientTypes.First(x => x.LangId == i.LangId).Types.Add(i.Type);
-            }
-        }
+            Ingredients = Ingredients.Append(new IngredientGetResponse() { Id = Guid.Parse(result), Image = ingredient.Image, Properties = ingredient.Properties });
         return result;
     }
 
-    public async Task<string> Update(Guid id, IngredientCreate ingredient)
+    public async Task<string> Update(IngredientUpdateRequest ingredient)
     {
-        var response = await _httpClient.PutAsJsonAsync(api + id, ingredient);
+        var response = await _httpClient.PutAsJsonAsync(api, ingredient);
         var result = await response.Content.ReadAsStringAsync();
         if (response.IsSuccessStatusCode)
         {
-            Ingredients = Ingredients.Where(x => x.Id != id);
-            Ingredients = Ingredients.Append(new Ingredient() { Id = Guid.Parse(result), Image = ingredient.Image, Properties = ingredient.Properties });
-            foreach(var i in ingredient.Properties)
-            {
-                IngredientTypes.First(x => x.LangId == i.LangId).Types.Add(i.Type);
-            }
+            Ingredients = Ingredients.Where(x => x.Id != ingredient.Id);
+            Ingredients = Ingredients.Append(new IngredientGetResponse() { Id = Guid.Parse(result), Image = ingredient.Image, Properties = ingredient.Properties });
         }
         return result;
     }
@@ -64,9 +49,8 @@ public class IngredientsService : IIngredientsService
 
 public interface IIngredientsService
 {
-    Task<IEnumerable<Ingredient>> Get();
-    Task<Ingredient> Get(Guid id);
-    Task<HashSet<EntityTypes>> GetTypes();
-    Task<string> Add(IngredientCreate ingredient);
-    Task<string> Update(Guid id, IngredientCreate ingredient);
+    Task<IEnumerable<IngredientGetResponse>> Get();
+    Task<IngredientGetResponse> Get(Guid id);
+    Task<string> Add(IngredientCreateRequest ingredient);
+    Task<string> Update(IngredientUpdateRequest ingredient);
 }

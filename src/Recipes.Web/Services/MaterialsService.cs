@@ -1,4 +1,6 @@
-﻿using Recipes.Shared.Models;
+﻿using Recipes.Features.Materials.Create;
+using Recipes.Features.Materials.GetById;
+using Recipes.Features.Materials.Update;
 using System.Net.Http.Json;
 
 namespace Recipes.Web.Services;
@@ -13,50 +15,33 @@ public class MaterialsService : IMaterialsService
         _httpClient = clientFactory.CreateClient("API");
     }
 
-    private IEnumerable<Material> Materials;
-    private HashSet<EntityTypes> MaterialTypes;
+    private IEnumerable<MaterialGetResponse> Materials;
 
-    public async Task<IEnumerable<Material>> Get()
+    public async Task<IEnumerable<MaterialGetResponse>> Get()
     {
-        Materials ??= await _httpClient.GetFromJsonAsync<IEnumerable<Material>>(api);
+        Materials ??= await _httpClient.GetFromJsonAsync<IEnumerable<MaterialGetResponse>>(api);
         return Materials;
     }
 
-    public async Task<Material> Get(Guid id) => await _httpClient.GetFromJsonAsync<Material>(api + id);
+    public async Task<MaterialGetResponse> Get(Guid id) => await _httpClient.GetFromJsonAsync<MaterialGetResponse>(api + id);
 
-    public async Task<HashSet<EntityTypes>> GetTypes()
-    {
-        MaterialTypes ??= await _httpClient.GetFromJsonAsync<HashSet<EntityTypes>>(api + "Types");
-        return MaterialTypes;
-    }
-
-    public async Task<string> Add(MaterialCreate material)
+    public async Task<string> Add(MaterialCreateRequest material)
     {
         var response = await _httpClient.PostAsJsonAsync(api, material);
         var result = await response.Content.ReadAsStringAsync();
         if(response.IsSuccessStatusCode)
-        {
-            Materials = Materials.Append(new Material() { Id = Guid.Parse(result), Image = material.Image, Properties = material.Properties });
-            foreach(var i in material.Properties)
-            {
-                MaterialTypes.First(x => x.LangId == i.LangId).Types.Add(i.Type);
-            }
-        }
+            Materials = Materials.Append(new MaterialGetResponse() { Id = Guid.Parse(result), Image = material.Image, Properties = material.Properties });
         return result;
     }
 
-    public async Task<string> Update(Guid id, MaterialCreate material)
+    public async Task<string> Update(MaterialUpdateRequest material)
     {
-        var response = await _httpClient.PutAsJsonAsync(api + id, material);
+        var response = await _httpClient.PutAsJsonAsync(api, material);
         var result = await response.Content.ReadAsStringAsync();
         if(response.IsSuccessStatusCode)
         {
-            Materials = Materials.Where(x => x.Id != id);
-            Materials = Materials.Append(new Material() { Id = Guid.Parse(result), Image = material.Image, Properties = material.Properties });
-            foreach(var i in material.Properties)
-            {
-                MaterialTypes.First(x => x.LangId == i.LangId).Types.Add(i.Type);
-            }
+            Materials = Materials.Where(x => x.Id != material.Id);
+            Materials = Materials.Append(new MaterialGetResponse() { Id = Guid.Parse(result), Image = material.Image, Properties = material.Properties });
         }
         return result;
     }
@@ -64,9 +49,8 @@ public class MaterialsService : IMaterialsService
 
 public interface IMaterialsService
 {
-    Task<IEnumerable<Material>> Get();
-    Task<Material> Get(Guid id);
-    Task<HashSet<EntityTypes>> GetTypes();
-    Task<string> Add(MaterialCreate ingredient);
-    Task<string> Update(Guid id, MaterialCreate ingredient);
+    Task<IEnumerable<MaterialGetResponse>> Get();
+    Task<MaterialGetResponse> Get(Guid id);
+    Task<string> Add(MaterialCreateRequest ingredient);
+    Task<string> Update(MaterialUpdateRequest ingredient);
 }

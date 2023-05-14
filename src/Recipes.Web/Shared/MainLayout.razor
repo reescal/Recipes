@@ -1,17 +1,27 @@
 ﻿@inherits LayoutComponentBase
 
 <Layout Class="layout">
-    <Header>
-        <div class="logo" />
-        <Menu Theme="MenuTheme.Dark" Mode="MenuMode.Horizontal" DefaultSelectedKeys=@(new[]{nameof(Recipes)}) Selectable=false>
-            <MenuItem Key=@nameof(Recipes) RouterLink="/Recipes" RouterMatch="NavLinkMatch.All">Recipes</MenuItem>
-            <MenuItem Key="Ingredients" RouterLink="/Ingredients" RouterMatch="NavLinkMatch.All">Ingredients</MenuItem>
-            <MenuItem Key="Materials" RouterLink="/Materials" RouterMatch="NavLinkMatch.All">Materials</MenuItem>
-            <MenuItem Key="Grocery List" RouterLink="/GroceryList" RouterMatch="NavLinkMatch.All">Grocery List</MenuItem>
-            <MenuItem Key="Language" OnClick="ToggleLang">
-                <Icon Type="global" Theme="outline"></Icon>
-            </MenuItem>
-        </Menu>
+    <Header Class="custom-header">
+        <GridRow Justify="space-between">
+            <GridCol>
+                <Title Level="3" Style="line-height: inherit">RESEater.io</Title>
+            </GridCol>
+            <GridCol>
+                <GridRow Justify="space-between">
+                    <GridCol>
+                        <Menu Theme="MenuTheme.Light" Mode="MenuMode.Horizontal" DefaultSelectedKeys=@(new[]{nameof(Recipes)}) Selectable=false>
+                            <MenuItem Key=@nameof(Recipes) RouterLink="/Recipes" RouterMatch="NavLinkMatch.All">Recipes</MenuItem>
+                            <MenuItem Key="Ingredients" RouterLink="/Ingredients" RouterMatch="NavLinkMatch.All">Ingredients</MenuItem>
+                            <MenuItem Key="Materials" RouterLink="/Materials" RouterMatch="NavLinkMatch.All">Materials</MenuItem>
+                            <MenuItem Key="Grocery List" RouterLink="/GroceryList" RouterMatch="NavLinkMatch.All">Grocery List</MenuItem>
+                        </Menu>
+                    </GridCol>
+                    <GridCol>
+                        <Button Type="@ButtonType.Text" Shape="@ButtonShape.Circle" Icon="@IconType.Outline.Global" OnClick="ToggleLang" />
+                    </GridCol>
+                </GridRow>
+            </GridCol>
+        </GridRow>
     </Header>
     <Content Style="padding: 0 10px;">
         <CascadingValue Value="@_lang">
@@ -25,6 +35,15 @@
         </CascadingValue>
     </Content>
 </Layout>
+
+<style>
+    .custom-header {
+        height: 44px;
+        padding: 0 10px;
+        line-height: 44px;
+        background: #ffffff;
+    }
+</style>
 
 @code{
     private Lang _lang = Lang.English;

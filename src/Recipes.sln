@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.2.32630.192
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Recipes.Web", "Recipes.Web\Recipes.Web.csproj", "{26BE1E92-534F-4A20-82AB-ABF27FB14B32}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Recipes.Api", "Recipes.Api\Recipes.Api.csproj", "{4603DBE1-4FB1-4FFE-B199-CDB8BC7E40A0}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Recipes.Shared", "Recipes.Shared\Recipes.Shared.csproj", "{A1A5DC4B-EFFB-4B66-8509-4B1163A9F3A5}"
@@ -17,16 +15,18 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Recipes.Data", "Recipes.Data\Recipes.Data.csproj", "{7210B8A8-D381-472D-B148-99190DBA11C9}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Recipes.Features", "Recipes.Features\Recipes.Features.csproj", "{21437F27-3744-40DD-835A-1BE27F16BBC7}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Recipes.Web", "Recipes.Web\Recipes.Web.csproj", "{93C8DB7E-94AB-492D-AE06-0109A9E3258D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{26BE1E92-534F-4A20-82AB-ABF27FB14B32}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{26BE1E92-534F-4A20-82AB-ABF27FB14B32}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{26BE1E92-534F-4A20-82AB-ABF27FB14B32}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{26BE1E92-534F-4A20-82AB-ABF27FB14B32}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4603DBE1-4FB1-4FFE-B199-CDB8BC7E40A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4603DBE1-4FB1-4FFE-B199-CDB8BC7E40A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4603DBE1-4FB1-4FFE-B199-CDB8BC7E40A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -39,6 +39,18 @@ Global
 		{4E0978FE-52C3-432E-A0CD-F3BACEC17D77}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4E0978FE-52C3-432E-A0CD-F3BACEC17D77}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4E0978FE-52C3-432E-A0CD-F3BACEC17D77}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7210B8A8-D381-472D-B148-99190DBA11C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7210B8A8-D381-472D-B148-99190DBA11C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7210B8A8-D381-472D-B148-99190DBA11C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7210B8A8-D381-472D-B148-99190DBA11C9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{21437F27-3744-40DD-835A-1BE27F16BBC7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{21437F27-3744-40DD-835A-1BE27F16BBC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{21437F27-3744-40DD-835A-1BE27F16BBC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{21437F27-3744-40DD-835A-1BE27F16BBC7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{93C8DB7E-94AB-492D-AE06-0109A9E3258D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{93C8DB7E-94AB-492D-AE06-0109A9E3258D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{93C8DB7E-94AB-492D-AE06-0109A9E3258D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{93C8DB7E-94AB-492D-AE06-0109A9E3258D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

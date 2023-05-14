@@ -10,7 +10,9 @@ using Recipes.Api;
 using static Recipes.Shared.Helpers.Helpers.Configuration;
 using Recipes.Shared.Models;
 using Microsoft.EntityFrameworkCore;
-using Recipes.Shared.Entities;
+using Recipes.Data;
+using Recipes.Shared.Constants;
+using Recipes.Data.Entities;
 
 namespace Recipes.Tests;
 
@@ -58,7 +60,12 @@ public static class Testing
         var cosmosConfig = Cosmos(Configuration);
         var options = new DbContextOptionsBuilder<DocsContext>();
         options.UseCosmos(cosmosConfig.ConnectionString, cosmosConfig.DatabaseName);
-        var context = new DocsContext(options.Options, Configuration);
+        var cosmosConfigContainer = new CosmosConfig
+        {
+            ContainerName = Configuration[DBConstants.containerName]
+                    ?? Configuration.GetSection("Values").GetValue<string>(DBConstants.containerName)
+        };
+        var context = new DocsContext(options.Options, cosmosConfigContainer);
         context.Set<T>().Add(t);
         await context.SaveChangesAsync();
         return t;
