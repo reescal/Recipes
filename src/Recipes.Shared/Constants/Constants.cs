@@ -4,14 +4,11 @@ public static class Responses
 {
     public static string NotFound(string entity) => $"{entity} not found";
     public static string NotFound(string entity, Guid id) => $"{entity} with id {id} not found";
-    public static string InvalidLang(string id) => $"{invalidLang} {id}";
-    private const string invalidLang = "Invalid language id";
 }
 
 public static class Constants
 {
     public const string id = "id";
-    public const string langId = "langId";
 }
 
 public static class ContentTypes

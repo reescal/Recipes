@@ -6,8 +6,7 @@ public class RecipeGetValidator : AbstractValidator<RecipeGetRequest>
 {
     public RecipeGetValidator()
     {
-        RuleFor(x => x.Id)
-            .NotEmpty()
-            .WithMessage(ValidationError.Required(nameof(RecipeGetRequest.Id)));
+        RuleFor(x => x.Id).NotEmpty()
+                            .WithMessage(ValidationError.Required(nameof(RecipeGetRequest.Id)));
     }
 }

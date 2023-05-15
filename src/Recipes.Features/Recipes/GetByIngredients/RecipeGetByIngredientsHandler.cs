@@ -22,7 +22,7 @@ public class RecipeGetByIngredientsHandler : IRequestHandler<RecipeGetByIngredie
         var recipes = _docsContext.Recipes.AsNoTracking().AsEnumerable();
         var recipeByIngredients = recipes.Where(x => x.Ingredients.Any(y => request.Ingredients.Contains(y.IngredientId)));
 
-        var response = _mapper.Map<List<RecipeGetResponse>>(recipeByIngredients);
+        var response = recipeByIngredients.IncludeIngredientsAndMaterials(_docsContext, _mapper);
 
         return Task.FromResult(response);
     }

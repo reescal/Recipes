@@ -1,0 +1,74 @@
+﻿@page "/Ingredients"
+@using Recipes.Features.Ingredients.GetById;
+@using Recipes.Web.Models;
+@using Recipes.Web.Services;
+@inject IIngredientsService _ingredientsService
+@inject NavigationManager _navManager
+
+<GridRow>
+    <GridCol Flex=@("auto")>
+        <AutoCompleteSimpleEntity Entities="entities" @bind-SearchTerm="searchTerm"/>
+    </GridCol>
+    <GridCol Flex=@("32px")>
+        <Button Type="@ButtonType.Default" Icon="@IconType.Outline.Plus" OnClick="@(() => _navManager.NavigateTo("/Ingredients/Create"))" />
+    </GridCol>
+</GridRow>
+
+@foreach (var group in filteredIngredients)
+{
+    <Divider Orientation="left" Style="font-weight:bold">@group.Key</Divider>
+    <AntList Grid="grid" DataSource="@group">
+        <ListItem>
+            <Card Size="small" Hoverable Bordered>
+                <Cover>
+                    <img src="@context.Image" />
+                </Cover>
+                <ChildContent>
+                    <CardMeta Title="@context.Name" />
+                </ChildContent>
+                <ActionTemplate>
+                    <CardAction><Icon Type="shopping-cart" /></CardAction>
+                    <CardAction><Icon Type="profile" /></CardAction>
+                    <CardAction><Icon Type="partition" /></CardAction>
+                    <CardAction><Icon Type="edit" OnClick="@(() => _navManager.NavigateTo($"/Ingredients/Update/{context.Id}"))" /></CardAction>
+                </ActionTemplate>
+            </Card>
+    </ListItem>
+</AntList>
+}
+
+@code {
+    private IEnumerable<IngredientGetResponse> ingredients { get; set; } = new List<IngredientGetResponse>();
+
+    private string searchTerm = string.Empty;
+
+    private ListGridType grid = new()
+        {
+            Gutter = 16,
+            Xs = 1,
+            Sm = 2,
+            Md = 4,
+            Lg = 4,
+            Xl = 6,
+            Xxl = 3,
+        };
+
+    protected override async Task OnInitializedAsync() => ingredients = await _ingredientsService.Get();
+
+    private IOrderedEnumerable<SimpleEntity> entities => ingredients
+                                                            .Select(i => new SimpleEntity
+                                                            {
+                                                                Id = i.Id,
+                                                                Name = i.Name,
+                                                                Type = i.Type
+                                                            })
+                                                            .OrderBy(x => x.Type)
+                                                            .ThenBy(x => x.Name);
+
+    private IEnumerable<IGrouping<string, IngredientGetResponse>> filteredIngredients =>
+        string.IsNullOrEmpty(searchTerm) ?
+        ingredients.GroupBy(x => x.Type) :
+        ingredients
+            .Where(x => (x.Type + x.Name).Contains(searchTerm, StringComparison.InvariantCultureIgnoreCase))
+            .GroupBy(x => x.Type);
+}

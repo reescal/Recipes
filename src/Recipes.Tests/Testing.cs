@@ -8,7 +8,6 @@ using Moq;
 using Newtonsoft.Json;
 using Recipes.Api;
 using static Recipes.Shared.Helpers.Helpers.Configuration;
-using Recipes.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using Recipes.Data;
 using Recipes.Shared.Constants;
@@ -66,9 +65,16 @@ public static class Testing
                     ?? Configuration.GetSection("Values").GetValue<string>(DBConstants.containerName)
         };
         var context = new DocsContext(options.Options, cosmosConfigContainer);
-        context.Set<T>().Add(t);
-        await context.SaveChangesAsync();
-        return t;
+        var dbSet = context.Set<T>();
+        var entity = dbSet.FirstOrDefault();
+        if (entity != null)
+            return entity;
+        else
+        {
+            dbSet.Add(t);
+            await context.SaveChangesAsync();
+            return t;
+        }
     }
 
     public static async Task<Ingredient> CreateIngredient()
@@ -76,23 +82,9 @@ public static class Testing
         var ingredient = new Ingredient()
         {
             Image = "https://image/link.png",
-            Properties = new()
-            {
-                new()
-                {
-                    LangId = Shared.Enums.Lang.English,
-                    Description = "Description",
-                    Name = "Name",
-                    Type = "Type"
-                },
-                new()
-                {
-                    LangId = Shared.Enums.Lang.Spanish,
-                    Description = "Descripcion",
-                    Name = "Nombre",
-                    Type = "Tipo"
-                }
-            }
+            Description = "Description",
+            Name = "Name",
+            Type = "Type"
         };
         return await CreateEntity(ingredient);
     }
@@ -102,23 +94,9 @@ public static class Testing
         var material = new Material()
         {
             Image = "https://image/link.png",
-            Properties = new()
-            {
-                new()
-                {
-                    LangId = Shared.Enums.Lang.English,
-                    Description = "Description",
-                    Name = "Name",
-                    Type = "Type"
-                },
-                new()
-                {
-                    LangId = Shared.Enums.Lang.Spanish,
-                    Description = "Descripcion",
-                    Name = "Nombre",
-                    Type = "Tipo"
-                }
-            }
+            Description = "Description",
+            Name = "Name",
+            Type = "Type"
         };
         return await CreateEntity(material);
     }
@@ -131,23 +109,9 @@ public static class Testing
             Image = "https://valid/link.png",
             Time = 30,
             Yield = "8 servings",
-            Properties = new IndexHashSet<RecipeProperties>
-            {
-                new()
-                {
-                    LangId = Shared.Enums.Lang.English,
-                    Description = "Description",
-                    Name = "Name",
-                    Type= "Type"
-                },
-                new()
-                {
-                    LangId = Shared.Enums.Lang.Spanish,
-                    Description = "Descripcion",
-                    Name = "Nombre",
-                    Type= "Tipo"
-                }
-            },
+            Description = "Description",
+            Name = "Name",
+            Type = "Type",
             Ingredients = new List<IngredientRow>
             {
                 new()

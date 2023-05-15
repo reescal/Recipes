@@ -1,0 +1,102 @@
+﻿@page "/Materials/Update/{Id:guid}"
+@using Recipes.Data.Entities;
+@using Recipes.Features.Materials.GetById;
+@using Recipes.Features.Materials.Update;
+@using Recipes.Web.Services;
+@using Recipes.Web.Validation
+@using static Recipes.Shared.Constants.Responses;
+@inject IMaterialsService _materialsService
+@inject IMessageService _message
+@inject NavigationManager _navManager
+
+@if (material == null || material?.Id == Guid.Empty)
+{
+    <GridRow Justify="center">
+        <GridCol>
+            <Spin Indicator="loadingIcon" />
+        </GridCol>
+    </GridRow>
+}
+else
+{
+    <GridRow>
+        <GridCol Offset="8" Span="8">
+            <Title Level="4" Style="text-align: center; border-bottom: 1px #1890FF solid">Update Material</Title>
+        </GridCol>
+    </GridRow>
+    <Form Model="@materialUpdate" @ref="@_form" LabelColSpan="2" WrapperColSpan="6" LabelColOffset="8" OnFinish="OnFinish">
+        <Validator>
+            <FluentValidationValidator />
+        </Validator>
+        <ChildContent>
+            <FormItem Label="Image">
+                <Input @bind-Value="context.Image" />
+            </FormItem>
+            <FormItem Label="Name">
+                <Input @bind-Value="@context.Name" />
+            </FormItem>
+            <FormItem Label="Description">
+                <TextArea @bind-Value="@context.Description" />
+            </FormItem>
+            <FormItem Label="Type">
+                <AutoComplete @bind-Value="@context.Type" Options="@MaterialTypes" />
+            </FormItem>
+            <FormItem WrapperColOffset="10" WrapperColSpan="2">
+                <Button Type="@ButtonType.Primary" HtmlType="submit" Disabled="submitDisabled">
+                    Submit
+                </Button>
+            </FormItem>
+        </ChildContent>
+    </Form>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+    private Form<MaterialUpdateRequest> _form;
+
+    private MaterialUpdateRequest materialUpdate = new MaterialUpdateRequest();
+
+    private IEnumerable<MaterialGetResponse> materials { get; set; } = new List<MaterialGetResponse>();
+    private MaterialGetResponse material { get; set; } = new();
+
+    private bool submitDisabled;
+
+    RenderFragment loadingIcon = @<Icon Type="loading" Theme="outline" Style="font-size: 24px" Spin />;
+
+    protected override async Task OnInitializedAsync() => materials = await _materialsService.Get();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        material = materials.FirstOrDefault(x => x.Id == Id);
+        if (material == null)
+        {
+            await _message.Error(NotFound(nameof(Material), Id));
+            _navManager.NavigateTo("/Materials");
+        }
+    }
+
+    private HashSet<string> MaterialTypes => materials.Select(i => i.Type).ToHashSet();
+
+    private async Task OnFinish(EditContext editContext)
+    {
+        submitDisabled = true;
+        var result = await _materialsService.Update(materialUpdate);
+        if (result.Valid)
+        {
+            await _message.Success(result.Message);
+            _navManager.NavigateTo("/Materials");
+        }
+        else
+        {
+            var errors = result.Message.Split('\n');
+            var tasks = new List<Task>();
+            foreach (var error in errors)
+            {
+                tasks.Add(_message.Error(error));
+            }
+            await Task.WhenAll(tasks);
+        }
+        submitDisabled = false;
+    }
+}

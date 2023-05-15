@@ -65,9 +65,8 @@ public class MaterialsTests
         var resultObject = ((BadRequestObjectResult)result).Value;
         resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
         var validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(2);
+        validationFailures!.Count.ShouldBe(4);
         validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required("Image link"));
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(MaterialCreateRequest.Properties)));
 
         material.Image = "http://invalid/link";
         req = CreateMockRequest(material);
@@ -76,66 +75,11 @@ public class MaterialsTests
         resultObject = ((BadRequestObjectResult)result).Value;
         resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
         validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(2);
+        validationFailures!.Count.ShouldBe(4);
         validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Invalid("image link"));
 
         material.Image = "https://valid/link.png";
-        material.Properties = new();
-        req = CreateMockRequest(material);
-        result = await _sut.CreateMaterial(req.Object);
-        result.ShouldBeAssignableTo<BadRequestObjectResult>();
-        resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(1);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(MaterialCreateRequest.Properties)));
-
-        material.Properties = new() { new() };
-        req = CreateMockRequest(material);
-        result = await _sut.CreateMaterial(req.Object);
-        result.ShouldBeAssignableTo<BadRequestObjectResult>();
-        resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(4);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Invalid("Language"));
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(MaterialProperties.Name)));
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(MaterialProperties.Description)));
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(MaterialProperties.Type)));
-
-        var materialProperty = material.Properties.First();
-        materialProperty.Name = string.Empty;
-        req = CreateMockRequest(material);
-        result = await _sut.CreateMaterial(req.Object);
-        result.ShouldBeAssignableTo<BadRequestObjectResult>();
-        resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(4);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(MaterialProperties.Name)));
-
-        materialProperty.Name = "Aa";
-        req = CreateMockRequest(material);
-        result = await _sut.CreateMaterial(req.Object);
-        result.ShouldBeAssignableTo<BadRequestObjectResult>();
-        resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(4);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.TooShort(nameof(MaterialProperties.Name)));
-
-        materialProperty.Name = "A23456789012345678901234567890123456789012345678901";
-        req = CreateMockRequest(material);
-        result = await _sut.CreateMaterial(req.Object);
-        result.ShouldBeAssignableTo<BadRequestObjectResult>();
-        resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(4);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.TooLong(nameof(MaterialProperties.Name)));
-
-        materialProperty.Name = "Valid";
-        materialProperty.Description = string.Empty;
+        material.Name = string.Empty;
         req = CreateMockRequest(material);
         result = await _sut.CreateMaterial(req.Object);
         result.ShouldBeAssignableTo<BadRequestObjectResult>();
@@ -143,10 +87,30 @@ public class MaterialsTests
         resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
         validationFailures = resultObject as List<ValidationFailure>;
         validationFailures!.Count.ShouldBe(3);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(MaterialProperties.Description)));
+        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(MaterialCreateRequest.Name)));
 
-        materialProperty.Description = "Valid";
-        materialProperty.Type = string.Empty;
+        material.Name = "Aa";
+        req = CreateMockRequest(material);
+        result = await _sut.CreateMaterial(req.Object);
+        result.ShouldBeAssignableTo<BadRequestObjectResult>();
+        resultObject = ((BadRequestObjectResult)result).Value;
+        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
+        validationFailures = resultObject as List<ValidationFailure>;
+        validationFailures!.Count.ShouldBe(3);
+        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.TooShort(nameof(MaterialCreateRequest.Name)));
+
+        material.Name = new string('a', 51);
+        req = CreateMockRequest(material);
+        result = await _sut.CreateMaterial(req.Object);
+        result.ShouldBeAssignableTo<BadRequestObjectResult>();
+        resultObject = ((BadRequestObjectResult)result).Value;
+        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
+        validationFailures = resultObject as List<ValidationFailure>;
+        validationFailures!.Count.ShouldBe(3);
+        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.TooLong(nameof(MaterialCreateRequest.Name)));
+
+        material.Name = "Valid";
+        material.Description = string.Empty;
         req = CreateMockRequest(material);
         result = await _sut.CreateMaterial(req.Object);
         result.ShouldBeAssignableTo<BadRequestObjectResult>();
@@ -154,30 +118,10 @@ public class MaterialsTests
         resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
         validationFailures = resultObject as List<ValidationFailure>;
         validationFailures!.Count.ShouldBe(2);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(MaterialProperties.Type)));
+        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(MaterialCreateRequest.Description)));
 
-        materialProperty.Type = "Aa";
-        req = CreateMockRequest(material);
-        result = await _sut.CreateMaterial(req.Object);
-        result.ShouldBeAssignableTo<BadRequestObjectResult>();
-        resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(2);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.TooShort(nameof(MaterialProperties.Type)));
-
-        materialProperty.Type = "A23456789012345678901234567890123456789012345678901";
-        req = CreateMockRequest(material);
-        result = await _sut.CreateMaterial(req.Object);
-        result.ShouldBeAssignableTo<BadRequestObjectResult>();
-        resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(2);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.TooLong(nameof(MaterialProperties.Type)));
-
-        materialProperty.Type = "Valid";
-        materialProperty.LangId = 0;
+        material.Description = "Valid";
+        material.Type = string.Empty;
         req = CreateMockRequest(material);
         result = await _sut.CreateMaterial(req.Object);
         result.ShouldBeAssignableTo<BadRequestObjectResult>();
@@ -185,10 +129,29 @@ public class MaterialsTests
         resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
         validationFailures = resultObject as List<ValidationFailure>;
         validationFailures!.Count.ShouldBe(1);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Invalid("Language"));
+        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(MaterialCreateRequest.Type)));
 
-        materialProperty.LangId = Shared.Enums.Lang.English;
-        material.Properties.Add(new() { LangId = Shared.Enums.Lang.Spanish, Description = "Descripcion", Name = "Nombre", Type = "Tipo" });
+        material.Type = "Aa";
+        req = CreateMockRequest(material);
+        result = await _sut.CreateMaterial(req.Object);
+        result.ShouldBeAssignableTo<BadRequestObjectResult>();
+        resultObject = ((BadRequestObjectResult)result).Value;
+        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
+        validationFailures = resultObject as List<ValidationFailure>;
+        validationFailures!.Count.ShouldBe(1);
+        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.TooShort(nameof(MaterialCreateRequest.Type)));
+
+        material.Type = new string('a', 51);
+        req = CreateMockRequest(material);
+        result = await _sut.CreateMaterial(req.Object);
+        result.ShouldBeAssignableTo<BadRequestObjectResult>();
+        resultObject = ((BadRequestObjectResult)result).Value;
+        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
+        validationFailures = resultObject as List<ValidationFailure>;
+        validationFailures!.Count.ShouldBe(1);
+        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.TooLong(nameof(MaterialCreateRequest.Type)));
+
+        material.Type = "Valid";
         req = CreateMockRequest(material);
         result = await _sut.CreateMaterial(req.Object);
         result.ShouldBeAssignableTo<OkObjectResult>();
@@ -208,7 +171,9 @@ public class MaterialsTests
         {
             Id = Guid.NewGuid(),
             Image = material.Image,
-            Properties = material.Properties
+            Name = material.Name,
+            Description = material.Description,
+            Type = material.Type
         };
         var req = CreateMockRequest(materialUpdate);
 

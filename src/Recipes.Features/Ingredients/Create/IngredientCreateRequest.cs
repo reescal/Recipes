@@ -1,10 +1,11 @@
 ﻿using MediatR;
-using Recipes.Shared.Models;
 
 namespace Recipes.Features.Ingredients.Create;
 
 public class IngredientCreateRequest : IRequest<Guid>
 {
     public string Image { get; set; }
-    public IndexHashSet<IngredientProperties> Properties { get; set; }
+    public string Name { get; set; }
+    public string Description { get; set; }
+    public string Type { get; set; }
 }

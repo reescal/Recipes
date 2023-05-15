@@ -7,32 +7,23 @@
                 <Title Level="3" Style="line-height: inherit">RESEater.io</Title>
             </GridCol>
             <GridCol>
-                <GridRow Justify="space-between">
-                    <GridCol>
-                        <Menu Theme="MenuTheme.Light" Mode="MenuMode.Horizontal" DefaultSelectedKeys=@(new[]{nameof(Recipes)}) Selectable=false>
-                            <MenuItem Key=@nameof(Recipes) RouterLink="/Recipes" RouterMatch="NavLinkMatch.All">Recipes</MenuItem>
-                            <MenuItem Key="Ingredients" RouterLink="/Ingredients" RouterMatch="NavLinkMatch.All">Ingredients</MenuItem>
-                            <MenuItem Key="Materials" RouterLink="/Materials" RouterMatch="NavLinkMatch.All">Materials</MenuItem>
-                            <MenuItem Key="Grocery List" RouterLink="/GroceryList" RouterMatch="NavLinkMatch.All">Grocery List</MenuItem>
-                        </Menu>
-                    </GridCol>
-                    <GridCol>
-                        <Button Type="@ButtonType.Text" Shape="@ButtonShape.Circle" Icon="@IconType.Outline.Global" OnClick="ToggleLang" />
-                    </GridCol>
-                </GridRow>
+                <Menu Theme="MenuTheme.Light" Mode="MenuMode.Horizontal" DefaultSelectedKeys=@(new[]{nameof(Recipes)}) Selectable=false>
+                    <MenuItem Key=@nameof(Recipes) RouterLink="/Recipes" RouterMatch="NavLinkMatch.All">Recipes</MenuItem>
+                    <MenuItem Key="Ingredients" RouterLink="/Ingredients" RouterMatch="NavLinkMatch.All">Ingredients</MenuItem>
+                    <MenuItem Key="Materials" RouterLink="/Materials" RouterMatch="NavLinkMatch.All">Materials</MenuItem>
+                    <MenuItem Key="Grocery List" RouterLink="/GroceryList" RouterMatch="NavLinkMatch.All">Grocery List</MenuItem>
+                </Menu>
             </GridCol>
         </GridRow>
     </Header>
-    <Content Style="padding: 0 10px;">
-        <CascadingValue Value="@_lang">
-            <div class="page">
-                <main>
-                    <article class="content px-4">
-                        @Body
-                    </article>
-                </main>
-            </div>
-        </CascadingValue>
+    <Content Style="padding: 0 10px; background-color: white">
+        <div class="page">
+            <main>
+                <article class="content px-4">
+                    @Body
+                </article>
+            </main>
+        </div>
     </Content>
 </Layout>
 
@@ -46,7 +37,4 @@
 </style>
 
 @code{
-    private Lang _lang = Lang.English;
-
-    private void ToggleLang() => _lang = _lang == Lang.English ? Lang.Spanish : Lang.English;
 }

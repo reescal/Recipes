@@ -17,12 +17,12 @@ public class RecipesGetAllHandler : IRequestHandler<RecipesGetAllRequest, List<R
         _docsContext = factory.CreateDbContext();
     }
 
-    public async Task<List<RecipeGetResponse>> Handle(RecipesGetAllRequest request, CancellationToken cancellationToken)
+    public Task<List<RecipeGetResponse>> Handle(RecipesGetAllRequest request, CancellationToken cancellationToken)
     {
-        var recipes = await _docsContext.Recipes.ToListAsync();
+        var recipes = _docsContext.Recipes.AsEnumerable();
 
-        var response = _mapper.Map<List<RecipeGetResponse>>(recipes);
+        var response = recipes.IncludeIngredientsAndMaterials(_docsContext, _mapper);
 
-        return response;
+        return Task.FromResult(response);
     }
 }

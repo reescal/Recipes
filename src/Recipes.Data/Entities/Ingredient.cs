@@ -1,10 +1,10 @@
-﻿using Recipes.Shared.Models;
-
-namespace Recipes.Data.Entities;
+﻿namespace Recipes.Data.Entities;
 
 public class Ingredient
 {
     public Guid Id { get; set; }
     public string Image { get; set; }
-    public IndexHashSet<IngredientProperties> Properties { get; set; }
+    public string Name { get; set; }
+    public string Description { get; set; }
+    public string Type { get; set; }
 }

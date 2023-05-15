@@ -16,7 +16,7 @@ public class HttpFunctionExecutor : IHttpFunctionExecutor
         }
         catch (ValidationException ex)
         {
-            return new BadRequestObjectResult(ex.Errors);
+            return new BadRequestObjectResult(string.Join('\n', ex.Errors));
         }
         catch (ApiException ex)
         {

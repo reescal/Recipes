@@ -13,7 +13,6 @@ using static Recipes.Shared.Constants.Constants;
 using static Recipes.Shared.Constants.ContentTypes;
 using static Recipes.Shared.Constants.HttpMethods;
 using static Recipes.Api.Wrappers.Helpers;
-using Recipes.Shared.Enums;
 using MediatR;
 using Recipes.Features.Recipes.GetById;
 using Recipes.Features.Recipes.GetAll;
@@ -42,10 +41,9 @@ public class Recipes
 
     [FunctionName(nameof(GetRecipes))]
     [OpenApiOperation(operationId: nameof(GetRecipes), tags: new[] { _name })]
-    [OpenApiParameter(name: langId, In = ParameterLocation.Query, Required = false, Type = typeof(Lang), Description = "The **Lang Id** parameter")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: json, bodyType: typeof(IEnumerable<RecipeGetResponse>), Description = "The OK response")]
     public async Task<IActionResult> GetRecipes(
-        [HttpTrigger(AuthorizationLevel.Anonymous, get, Route = _name + "/Names")] HttpRequest req)
+        [HttpTrigger(AuthorizationLevel.Anonymous, get, Route = _name)] HttpRequest req)
     {
         _logger.LogInformation($"{nameof(GetRecipes)} function triggered.");
 

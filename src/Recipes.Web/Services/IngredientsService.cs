@@ -25,25 +25,24 @@ public class IngredientsService : IIngredientsService
 
     public async Task<IngredientGetResponse> Get(Guid id) => await _httpClient.GetFromJsonAsync<IngredientGetResponse>(api + id);
 
-    public async Task<string> Add(IngredientCreateRequest ingredient)
+    public async Task<(bool Valid, string Message)> Add(IngredientCreateRequest ingredient)
     {
         var response = await _httpClient.PostAsJsonAsync(api, ingredient);
-        var result = await response.Content.ReadAsStringAsync();
-        if (response.IsSuccessStatusCode)
-            Ingredients = Ingredients.Append(new IngredientGetResponse() { Id = Guid.Parse(result), Image = ingredient.Image, Properties = ingredient.Properties });
-        return result;
+        if(!response.IsSuccessStatusCode)
+            return (false, await response.Content.ReadAsStringAsync());
+        var result = await response.Content.ReadFromJsonAsync<Guid>();
+        Ingredients = Ingredients.Append(new IngredientGetResponse() { Id = result, Image = ingredient.Image, Name = ingredient.Name, Description = ingredient.Description, Type = ingredient.Type });
+        return (true, "Ingredient created successfully.");
     }
 
-    public async Task<string> Update(IngredientUpdateRequest ingredient)
+    public async Task<(bool Valid, string Message)> Update(IngredientUpdateRequest ingredient)
     {
         var response = await _httpClient.PutAsJsonAsync(api, ingredient);
-        var result = await response.Content.ReadAsStringAsync();
-        if (response.IsSuccessStatusCode)
-        {
-            Ingredients = Ingredients.Where(x => x.Id != ingredient.Id);
-            Ingredients = Ingredients.Append(new IngredientGetResponse() { Id = Guid.Parse(result), Image = ingredient.Image, Properties = ingredient.Properties });
-        }
-        return result;
+        if (!response.IsSuccessStatusCode)
+            return (false, await response.Content.ReadAsStringAsync());
+        var result = await response.Content.ReadFromJsonAsync<IngredientGetResponse>();
+        Ingredients = Ingredients.Where(x => x.Id != ingredient.Id).Append(result);
+        return (true, "Ingredient updated successfully.");
     }
 }
 
@@ -51,6 +50,6 @@ public interface IIngredientsService
 {
     Task<IEnumerable<IngredientGetResponse>> Get();
     Task<IngredientGetResponse> Get(Guid id);
-    Task<string> Add(IngredientCreateRequest ingredient);
-    Task<string> Update(IngredientUpdateRequest ingredient);
+    Task<(bool Valid, string Message)> Add(IngredientCreateRequest ingredient);
+    Task<(bool Valid, string Message)> Update(IngredientUpdateRequest ingredient);
 }

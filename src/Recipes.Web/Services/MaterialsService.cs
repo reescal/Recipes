@@ -25,25 +25,24 @@ public class MaterialsService : IMaterialsService
 
     public async Task<MaterialGetResponse> Get(Guid id) => await _httpClient.GetFromJsonAsync<MaterialGetResponse>(api + id);
 
-    public async Task<string> Add(MaterialCreateRequest material)
+    public async Task<(bool Valid, string Message)> Add(MaterialCreateRequest material)
     {
         var response = await _httpClient.PostAsJsonAsync(api, material);
-        var result = await response.Content.ReadAsStringAsync();
-        if(response.IsSuccessStatusCode)
-            Materials = Materials.Append(new MaterialGetResponse() { Id = Guid.Parse(result), Image = material.Image, Properties = material.Properties });
-        return result;
+        if (!response.IsSuccessStatusCode)
+            return (false, await response.Content.ReadAsStringAsync());
+        var result = await response.Content.ReadFromJsonAsync<Guid>();
+        Materials = Materials.Append(new MaterialGetResponse() { Id = result, Image = material.Image, Name = material.Name, Description = material.Description, Type = material.Type });
+        return (true, "Material created successfully.");
     }
 
-    public async Task<string> Update(MaterialUpdateRequest material)
+    public async Task<(bool Valid, string Message)> Update(MaterialUpdateRequest material)
     {
         var response = await _httpClient.PutAsJsonAsync(api, material);
-        var result = await response.Content.ReadAsStringAsync();
-        if(response.IsSuccessStatusCode)
-        {
-            Materials = Materials.Where(x => x.Id != material.Id);
-            Materials = Materials.Append(new MaterialGetResponse() { Id = Guid.Parse(result), Image = material.Image, Properties = material.Properties });
-        }
-        return result;
+        if (!response.IsSuccessStatusCode)
+            return (false, await response.Content.ReadAsStringAsync());
+        var result = await response.Content.ReadFromJsonAsync<MaterialGetResponse>();
+        Materials = Materials.Where(x => x.Id != material.Id).Append(result);
+        return (true, "Material updated successfully.");
     }
 }
 
@@ -51,6 +50,6 @@ public interface IMaterialsService
 {
     Task<IEnumerable<MaterialGetResponse>> Get();
     Task<MaterialGetResponse> Get(Guid id);
-    Task<string> Add(MaterialCreateRequest ingredient);
-    Task<string> Update(MaterialUpdateRequest ingredient);
+    Task<(bool Valid, string Message)> Add(MaterialCreateRequest ingredient);
+    Task<(bool Valid, string Message)> Update(MaterialUpdateRequest ingredient);
 }

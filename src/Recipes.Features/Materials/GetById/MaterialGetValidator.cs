@@ -6,8 +6,7 @@ public class MaterialGetValidator : AbstractValidator<MaterialGetRequest>
 {
     public MaterialGetValidator()
     {
-        RuleFor(x => x.Id)
-            .NotEmpty()
-            .WithMessage(ValidationError.Required(nameof(MaterialGetRequest.Id)));
+        RuleFor(x => x.Id).NotEmpty()
+                            .WithMessage(ValidationError.Required(nameof(MaterialGetRequest.Id)));
     }
 }

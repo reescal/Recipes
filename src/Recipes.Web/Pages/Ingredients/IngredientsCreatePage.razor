@@ -1,0 +1,74 @@
+﻿@page "/Ingredients/Create"
+@using Recipes.Features.Ingredients.Create;
+@using Recipes.Features.Ingredients.GetById;
+@using Recipes.Web.Services;
+@using Recipes.Web.Validation
+@inject IIngredientsService _ingredientsService
+@inject IMessageService _message
+@inject NavigationManager _navManager
+
+<GridRow>
+    <GridCol Offset="8" Span="8">
+        <Title Level="4" Style="text-align: center; border-bottom: 1px #1890FF solid">Create Ingredient</Title>
+    </GridCol>
+</GridRow>
+<Form Model="@ingredient" @ref="@_form" LabelColSpan="2" WrapperColSpan="6" LabelColOffset="8" OnFinish="OnFinish">
+    <Validator>
+        <FluentValidationValidator />
+    </Validator>
+    <ChildContent>
+        <FormItem Label="Image">
+            <Input @bind-Value="context.Image" />
+        </FormItem>
+        <FormItem Label="Name">
+            <Input @bind-Value="@context.Name" />
+        </FormItem>
+        <FormItem Label="Description">
+            <TextArea @bind-Value="@context.Description" />
+        </FormItem>
+        <FormItem Label="Type">
+            <AutoComplete @bind-Value="@context.Type" Options="@IngredientTypes" />
+        </FormItem>
+        <FormItem WrapperColOffset="10" WrapperColSpan="2">
+            <Button Type="@ButtonType.Primary" HtmlType="submit" Disabled="submitDisabled">
+                Submit
+            </Button>
+        </FormItem>
+    </ChildContent>
+</Form>
+
+@code {
+    private Form<IngredientCreateRequest> _form;
+
+    private IngredientCreateRequest ingredient = new IngredientCreateRequest();
+
+    private IEnumerable<IngredientGetResponse> ingredients { get; set; } = new List<IngredientGetResponse>();
+
+    private bool submitDisabled;
+
+    protected override async Task OnInitializedAsync() => ingredients = await _ingredientsService.Get();
+
+    private HashSet<string> IngredientTypes => ingredients.Select(i => i.Type).ToHashSet();
+
+    private async Task OnFinish(EditContext editContext)
+    {
+        submitDisabled = true;
+        var result = await _ingredientsService.Add(ingredient);
+        if (result.Valid)
+        {
+            await _message.Success(result.Message);
+            _navManager.NavigateTo("/Ingredients");
+        }
+        else
+        {
+            var errors = result.Message.Split('\n');
+            var tasks = new List<Task>();
+            foreach(var error in errors)
+            {
+                tasks.Add(_message.Error(error));
+            }
+            await Task.WhenAll(tasks);
+        }
+        submitDisabled = false;
+    }
+}

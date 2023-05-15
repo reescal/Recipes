@@ -10,7 +10,10 @@ public class RecipeGetResponse
     public string Video { get; set; }
     public string Yield { get; set; }
     public int Time { get; set; }
-    public HashSet<RecipeProperties> Properties { get; set; }
+    public string Name { get; set; }
+    public string Description { get; set; }
+    public string Type { get; set; }
+    public List<string> Tags { get; set; }
     public List<IngredientRowResponse> Ingredients { get; set; }
     public List<MaterialGetResponse> Materials { get; set; }
 }

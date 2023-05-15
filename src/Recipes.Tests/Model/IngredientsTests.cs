@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using static Recipes.Tests.Testing;
 using Recipes.Api;
-using Recipes.Shared.Models;
 using Shouldly;
 using Microsoft.AspNetCore.Http;
 using Moq;
@@ -10,7 +9,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Recipes.Shared.Constants;
 using MediatR;
-using Recipes.Data.Entities;
 using Recipes.Features.Ingredients.Create;
 using Recipes.Features.Ingredients.Update;
 using Recipes.Features.Ingredients.GetById;
@@ -66,9 +64,8 @@ public class IngredientsTests
         var resultObject = ((BadRequestObjectResult)result).Value;
         resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
         var validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(2);
+        validationFailures!.Count.ShouldBe(4);
         validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required("Image link"));
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(IngredientCreateRequest.Properties)));
 
         ingredient.Image = "http://invalid/link";
         req = CreateMockRequest(ingredient);
@@ -77,66 +74,11 @@ public class IngredientsTests
         resultObject = ((BadRequestObjectResult)result).Value;
         resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
         validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(2);
+        validationFailures!.Count.ShouldBe(4);
         validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Invalid("image link"));
 
         ingredient.Image = "https://valid/link.png";
-        ingredient.Properties = new();
-        req = CreateMockRequest(ingredient);
-        result = await _sut.CreateIngredient(req.Object);
-        result.ShouldBeAssignableTo<BadRequestObjectResult>();
-        resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(1);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(IngredientCreateRequest.Properties)));
-
-        ingredient.Properties = new() { new() };
-        req = CreateMockRequest(ingredient);
-        result = await _sut.CreateIngredient(req.Object);
-        result.ShouldBeAssignableTo<BadRequestObjectResult>();
-        resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(4);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Invalid("Language"));
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(IngredientProperties.Name)));
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(IngredientProperties.Description)));
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(IngredientProperties.Type)));
-
-        var ingredientProperty = ingredient.Properties.First();
-        ingredientProperty.Name = string.Empty;
-        req = CreateMockRequest(ingredient);
-        result = await _sut.CreateIngredient(req.Object);
-        result.ShouldBeAssignableTo<BadRequestObjectResult>();
-        resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(4);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(IngredientProperties.Name)));
-
-        ingredientProperty.Name = "Aa";
-        req = CreateMockRequest(ingredient);
-        result = await _sut.CreateIngredient(req.Object);
-        result.ShouldBeAssignableTo<BadRequestObjectResult>();
-        resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(4);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.TooShort(nameof(IngredientProperties.Name)));
-
-        ingredientProperty.Name = "A23456789012345678901234567890123456789012345678901";
-        req = CreateMockRequest(ingredient);
-        result = await _sut.CreateIngredient(req.Object);
-        result.ShouldBeAssignableTo<BadRequestObjectResult>();
-        resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(4);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.TooLong(nameof(IngredientProperties.Name)));
-
-        ingredientProperty.Name = "Valid";
-        ingredientProperty.Description = string.Empty;
+        ingredient.Name = string.Empty;
         req = CreateMockRequest(ingredient);
         result = await _sut.CreateIngredient(req.Object);
         result.ShouldBeAssignableTo<BadRequestObjectResult>();
@@ -144,10 +86,30 @@ public class IngredientsTests
         resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
         validationFailures = resultObject as List<ValidationFailure>;
         validationFailures!.Count.ShouldBe(3);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(IngredientProperties.Description)));
+        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(IngredientCreateRequest.Name)));
 
-        ingredientProperty.Description = "Valid";
-        ingredientProperty.Type = string.Empty;
+        ingredient.Name = new string('a', 2);
+        req = CreateMockRequest(ingredient);
+        result = await _sut.CreateIngredient(req.Object);
+        result.ShouldBeAssignableTo<BadRequestObjectResult>();
+        resultObject = ((BadRequestObjectResult)result).Value;
+        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
+        validationFailures = resultObject as List<ValidationFailure>;
+        validationFailures!.Count.ShouldBe(3);
+        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.TooShort(nameof(IngredientCreateRequest.Name)));
+
+        ingredient.Name = new string('a', 51);
+        req = CreateMockRequest(ingredient);
+        result = await _sut.CreateIngredient(req.Object);
+        result.ShouldBeAssignableTo<BadRequestObjectResult>();
+        resultObject = ((BadRequestObjectResult)result).Value;
+        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
+        validationFailures = resultObject as List<ValidationFailure>;
+        validationFailures!.Count.ShouldBe(3);
+        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.TooLong(nameof(IngredientCreateRequest.Name)));
+
+        ingredient.Name = "Valid";
+        ingredient.Description = string.Empty;
         req = CreateMockRequest(ingredient);
         result = await _sut.CreateIngredient(req.Object);
         result.ShouldBeAssignableTo<BadRequestObjectResult>();
@@ -155,30 +117,10 @@ public class IngredientsTests
         resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
         validationFailures = resultObject as List<ValidationFailure>;
         validationFailures!.Count.ShouldBe(2);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(IngredientProperties.Type)));
+        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(IngredientCreateRequest.Description)));
 
-        ingredientProperty.Type = "Aa";
-        req = CreateMockRequest(ingredient);
-        result = await _sut.CreateIngredient(req.Object);
-        result.ShouldBeAssignableTo<BadRequestObjectResult>();
-        resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(2);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.TooShort(nameof(IngredientProperties.Type)));
-
-        ingredientProperty.Type = "A23456789012345678901234567890123456789012345678901";
-        req = CreateMockRequest(ingredient);
-        result = await _sut.CreateIngredient(req.Object);
-        result.ShouldBeAssignableTo<BadRequestObjectResult>();
-        resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(2);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.TooLong(nameof(IngredientProperties.Type)));
-
-        ingredientProperty.Type = "Valid";
-        ingredientProperty.LangId = 0;
+        ingredient.Description = "Valid";
+        ingredient.Type = string.Empty;
         req = CreateMockRequest(ingredient);
         result = await _sut.CreateIngredient(req.Object);
         result.ShouldBeAssignableTo<BadRequestObjectResult>();
@@ -186,10 +128,29 @@ public class IngredientsTests
         resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
         validationFailures = resultObject as List<ValidationFailure>;
         validationFailures!.Count.ShouldBe(1);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Invalid("Language"));
+        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(IngredientCreateRequest.Type)));
 
-        ingredientProperty.LangId = Shared.Enums.Lang.English;
-        ingredient.Properties.Add(new() { LangId = Shared.Enums.Lang.Spanish, Description = "Descripcion", Name = "Nombre", Type = "Tipo" });
+        ingredient.Type = new string('a', 2);
+        req = CreateMockRequest(ingredient);
+        result = await _sut.CreateIngredient(req.Object);
+        result.ShouldBeAssignableTo<BadRequestObjectResult>();
+        resultObject = ((BadRequestObjectResult)result).Value;
+        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
+        validationFailures = resultObject as List<ValidationFailure>;
+        validationFailures!.Count.ShouldBe(1);
+        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.TooShort(nameof(IngredientCreateRequest.Type)));
+
+        ingredient.Type = new string('a', 51);
+        req = CreateMockRequest(ingredient);
+        result = await _sut.CreateIngredient(req.Object);
+        result.ShouldBeAssignableTo<BadRequestObjectResult>();
+        resultObject = ((BadRequestObjectResult)result).Value;
+        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
+        validationFailures = resultObject as List<ValidationFailure>;
+        validationFailures!.Count.ShouldBe(1);
+        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.TooLong(nameof(IngredientCreateRequest.Type)));
+
+        ingredient.Type = "Valid";
         req = CreateMockRequest(ingredient);
         result = await _sut.CreateIngredient(req.Object);
         result.ShouldBeAssignableTo<OkObjectResult>();
@@ -209,7 +170,9 @@ public class IngredientsTests
         {
             Id = Guid.NewGuid(),
             Image = ingredient.Image,
-            Properties = ingredient.Properties
+            Name = ingredient.Name,
+            Description = ingredient.Description,
+            Type = ingredient.Type
         };
         var req = CreateMockRequest(ingredientUpdate);
 

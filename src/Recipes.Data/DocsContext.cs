@@ -19,15 +19,11 @@ public class DocsContext : DbContext
     {
         modelBuilder.HasDefaultContainer(_container);
         modelBuilder.Entity<Ingredient>()
-            .HasPartitionKey(x => x.Id)
-            .OwnsMany(x => x.Properties);
+            .HasPartitionKey(x => x.Id);
         modelBuilder.Entity<Material>()
-            .HasPartitionKey(x => x.Id)
-            .OwnsMany(x => x.Properties);
+            .HasPartitionKey(x => x.Id);
         modelBuilder.Entity<Recipe>()
             .HasPartitionKey(x => x.Id)
-            .OwnsMany(x => x.Properties);
-        modelBuilder.Entity<Recipe>()
             .OwnsMany(x => x.Ingredients);
         modelBuilder.Entity<Recipe>()
             .OwnsMany(x => x.Materials);

@@ -12,13 +12,12 @@ public class RecipeGetByIngredientsValidator : AbstractValidator<RecipeGetByIngr
     public RecipeGetByIngredientsValidator(IDbContextFactory<DocsContext> factory)
     {
         var _docsContext = factory.CreateDbContext();
-        RuleFor(x => x.Ingredients).NotEmpty().WithMessage(ValidationError.Required(nameof(RecipeGetByIngredientsRequest.Ingredients)));
-        RuleForEach(x => x.Ingredients)
-            .NotEmpty()
-            .WithMessage(ValidationError.Required("Ingredient id cannot be empty"));
-        RuleForEach(x => x.Ingredients)
-            .Must(x => _docsContext.Ingredients.Find(x) != null)
-            .Unless(x => x.Ingredients.Any(i => i == Guid.Empty))
-            .WithMessage(NotFound(nameof(Ingredient)));
+        RuleFor(x => x.Ingredients).NotEmpty()
+                                    .WithMessage(ValidationError.Required(nameof(RecipeGetByIngredientsRequest.Ingredients)));
+        RuleForEach(x => x.Ingredients).NotEmpty()
+                                        .WithMessage(ValidationError.Required("Ingredient id cannot be empty"));
+        RuleForEach(x => x.Ingredients).Must(x => _docsContext.Ingredients.Find(x) != null)
+                                        .Unless(x => x.Ingredients.Any(i => i == Guid.Empty))
+                                        .WithMessage(NotFound(nameof(Ingredient)));
     }
 }
