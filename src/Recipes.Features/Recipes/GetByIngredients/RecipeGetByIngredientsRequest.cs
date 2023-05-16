@@ -2,7 +2,7 @@
 using Recipes.Features.Recipes.GetById;
 
 namespace Recipes.Features.Recipes.GetByIngredients;
-public class RecipeGetByIngredientsRequest : IRequest<List<RecipeGetResponse>>
+public class RecipeGetByIngredientsRequest : IRequest<IEnumerable<RecipeGetResponse>>
 {
-    public List<Guid> Ingredients { get; set; }
+    public IEnumerable<Guid> Ingredients { get; set; }
 }

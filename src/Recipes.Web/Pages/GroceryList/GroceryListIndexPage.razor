@@ -1,0 +1,87 @@
+﻿@page "/GroceryList"
+@using Recipes.Features.GroceryList.Get;
+@using Recipes.Web.Services;
+@inject IGroceryListService _groceryListService
+
+<Table Title="Grocery List" TItem="GroceryResponse" DataSource="@groceryList.Grocery">
+    <ColumnDefinitions>
+        <PropertyColumn Property="g => g.Quantity.Value">
+            @if (editId == context.Ingredient.Id)
+            {
+                <AntDesign.InputNumber Min="0.01" DefaultValue="1" @bind-Value="context.Quantity.Value" OnBlur="stopEdit" AutoFocus />
+            }
+            else
+            {
+                <div class="editable-cell-value-wrap" style="padding-right:24px" @onclick="() => startEdit(context.Ingredient.Id)">
+                    @context.Quantity.Value
+                </div>
+            }
+        </PropertyColumn>
+        <PropertyColumn Property="g => g.Quantity.Value" />
+        <PropertyColumn Property="g => g.Quantity.Unit" />
+        <PropertyColumn Property="g => g.Ingredient.Name" Filterable />
+        <PropertyColumn Property="g => g.Ingredient.Type" Sortable Filterable />
+        <ActionColumn Title="Action">
+            <Space>
+                <SpaceItem><Button Danger Icon="IconType.Outline.Delete" OnClick="() => Delete(context)"></Button></SpaceItem>
+            </Space>
+        </ActionColumn>
+        <ActionColumn Title="Action" Width="200">
+            <CellRender Context="cellData">
+                <a @onclick="@(()=> {cellData.RowData.Expanded=!cellData.RowData.Expanded;} )">
+                    @(cellData.RowData.Expanded ? "Collapse" : "Expand")
+                </a>
+                <a>Delete</a>
+            </CellRender>
+        </ActionColumn>
+    </ColumnDefinitions>
+    <ExpandTemplate>
+        @context.Data.Ingredient.Description
+    </ExpandTemplate>
+</Table>
+<GridRow Justify="space-between">
+    <GridCol>
+        <Button Type="@ButtonType.Primary">Add Ingredient</Button>
+    </GridCol>
+    <GridCol>
+        <Button Type="@ButtonType.Primary">Add Recipe(s)</Button>
+    </GridCol>
+    <GridCol>
+        <Button Type="@ButtonType.Primary">Email</Button>
+    </GridCol>
+    <GridCol>
+        <Button Type="@ButtonType.Primary" OnClick="Update">Update</Button>
+    </GridCol>
+</GridRow>
+
+<style>
+    .editable-cell {
+        position: relative;
+    }
+
+    .editable-cell-value-wrap {
+        padding: 5px 12px;
+        cursor: pointer;
+    }
+
+    .editable-row:hover .editable-cell-value-wrap {
+        padding: 4px 11px;
+        border: 1px solid #d9d9d9;
+        border-radius: 4px;
+    }
+</style>
+
+@code {
+    private GetGroceryListResponse groceryList = new();
+    private Guid editId;
+
+    protected override async Task OnInitializedAsync() => groceryList = await _groceryListService.Get();
+
+    private void Delete(GroceryResponse grocery) => groceryList.Grocery.Remove(grocery);
+
+    private void startEdit(Guid id) => editId = id;
+
+    private void stopEdit() => editId = Guid.Empty;
+
+    private async Task Update() => await _groceryListService.Update(groceryList.Grocery);
+}

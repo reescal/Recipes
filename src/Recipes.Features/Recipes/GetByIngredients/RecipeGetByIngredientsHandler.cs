@@ -6,7 +6,7 @@ using Recipes.Features.Recipes.GetById;
 
 namespace Recipes.Features.Recipes.GetByIngredients;
 
-public class RecipeGetByIngredientsHandler : IRequestHandler<RecipeGetByIngredientsRequest, List<RecipeGetResponse>>
+public class RecipeGetByIngredientsHandler : IRequestHandler<RecipeGetByIngredientsRequest, IEnumerable<RecipeGetResponse>>
 {
     private readonly IMapper _mapper;
     private readonly DocsContext _docsContext;
@@ -17,7 +17,7 @@ public class RecipeGetByIngredientsHandler : IRequestHandler<RecipeGetByIngredie
         _docsContext = factory.CreateDbContext();
     }
 
-    public Task<List<RecipeGetResponse>> Handle(RecipeGetByIngredientsRequest request, CancellationToken cancellationToken)
+    public Task<IEnumerable<RecipeGetResponse>> Handle(RecipeGetByIngredientsRequest request, CancellationToken cancellationToken)
     {
         var recipes = _docsContext.Recipes.AsNoTracking().AsEnumerable();
         var recipeByIngredients = recipes.Where(x => x.Ingredients.Any(y => request.Ingredients.Contains(y.IngredientId)));

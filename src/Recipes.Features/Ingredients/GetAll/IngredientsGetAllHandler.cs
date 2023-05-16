@@ -6,7 +6,7 @@ using Recipes.Features.Ingredients.GetById;
 
 namespace Recipes.Features.Ingredients.GetAll;
 
-public class IngredientsGetAllHandler : IRequestHandler<IngredientsGetAllRequest, List<IngredientGetResponse>>
+public class IngredientsGetAllHandler : IRequestHandler<IngredientsGetAllRequest, IEnumerable<IngredientGetResponse>>
 {
     private readonly IMapper _mapper;
     private readonly DocsContext _docsContext;
@@ -17,12 +17,12 @@ public class IngredientsGetAllHandler : IRequestHandler<IngredientsGetAllRequest
         _docsContext = factory.CreateDbContext();
     }
 
-    public async Task<List<IngredientGetResponse>> Handle(IngredientsGetAllRequest request, CancellationToken cancellationToken)
+    public Task<IEnumerable<IngredientGetResponse>> Handle(IngredientsGetAllRequest request, CancellationToken cancellationToken)
     {
-        var ingredients = await _docsContext.Ingredients.ToListAsync();
+        var ingredients = _docsContext.Ingredients.AsEnumerable();
 
-        var response = _mapper.Map<List<IngredientGetResponse>>(ingredients);
+        var response = _mapper.Map<IEnumerable<IngredientGetResponse>>(ingredients);
 
-        return response;
+        return Task.FromResult(response);
     }
 }

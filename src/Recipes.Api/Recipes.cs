@@ -51,7 +51,7 @@ public class Recipes
         {
             var response = await _mediator.Send(new RecipesGetAllRequest());
 
-            return new OkObjectResult(response);
+            return new OkObjectResult(ApiResponse<IEnumerable<RecipeGetResponse>>.FromResult(response));
         });
     }
 
@@ -68,7 +68,7 @@ public class Recipes
         {
             var response = await _mediator.Send(new RecipeGetRequest { Id = id });
 
-            return new OkObjectResult(response);
+            return new OkObjectResult(ApiResponse<RecipeGetResponse>.FromResult(response));
         });
     }
 
@@ -86,7 +86,7 @@ public class Recipes
             var ids = await DeserializeAsync<List<Guid>>(req);
             var response = await _mediator.Send(new RecipeGetByIngredientsRequest { Ingredients = ids });
 
-            return new OkObjectResult(response);
+            return new OkObjectResult(ApiResponse<IEnumerable<RecipeGetResponse>>.FromResult(response));
         });
     }
 
@@ -105,7 +105,7 @@ public class Recipes
 
             var response = await _mediator.Send(input);
 
-            return new OkObjectResult(response);
+            return new OkObjectResult(ApiResponse<Guid>.FromResult(response));
         });
     }
 
@@ -124,7 +124,7 @@ public class Recipes
 
             var response = await _mediator.Send(input);
 
-            return new OkObjectResult(response);
+            return new OkObjectResult(ApiResponse<Recipe>.FromResult(response));
         });
     }
 }

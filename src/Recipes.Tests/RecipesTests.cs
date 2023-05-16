@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Http;
 using Moq;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
-using FluentValidation.Results;
 using Recipes.Shared.Constants;
 using MediatR;
 using Recipes.Api;
@@ -17,7 +16,7 @@ using Recipes.Features.Recipes.Update;
 using Recipes.Features.Recipes.GetByIngredients;
 using static Recipes.Shared.Constants.Responses;
 
-namespace Recipes.Tests.Model;
+namespace Recipes.Tests;
 
 public class RecipesTests
 {
@@ -44,8 +43,8 @@ public class RecipesTests
 
         result.ShouldBeAssignableTo<OkObjectResult>();
         var oORV = ((OkObjectResult)result).Value;
-        oORV.ShouldBeAssignableTo<RecipeGetResponse>();
-        recipe.Id.ShouldBe((oORV as RecipeGetResponse)!.Id);
+        oORV.ShouldBeAssignableTo<ApiResponse<RecipeGetResponse>>();
+        recipe.Id.ShouldBe((oORV as ApiResponse<RecipeGetResponse>)!.Result.Id);
     }
 
     public async Task ShouldGetRecipesByIngredients()
@@ -55,20 +54,20 @@ public class RecipesTests
         var result = await _sut.GetRecipesByIngredients(req.Object);
         result.ShouldBeAssignableTo<BadRequestObjectResult>();
         var resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        var validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(1);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(RecipeGetByIngredientsRequest.Ingredients)));
+        resultObject.ShouldBeAssignableTo<ApiResponse>();
+        var validationFailures = resultObject as ApiResponse;
+        validationFailures!.Errors.Count().ShouldBe(1);
+        validationFailures.Errors.ShouldContain(ValidationError.Required(nameof(RecipeGetByIngredientsRequest.Ingredients)));
 
         ingredients = new List<Guid>() { Guid.NewGuid() };
         req = CreateMockRequest(ingredients.ToArray());
         result = await _sut.GetRecipesByIngredients(req.Object);
         result.ShouldBeAssignableTo<BadRequestObjectResult>();
         resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(1);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(NotFound(nameof(Ingredient)));
+        resultObject.ShouldBeAssignableTo<ApiResponse>();
+        validationFailures = resultObject as ApiResponse;
+        validationFailures!.Errors.Count().ShouldBe(1);
+        validationFailures.Errors.ShouldContain(NotFound(nameof(Ingredient)));
 
         var recipe = await CreateRecipe();
 
@@ -77,9 +76,9 @@ public class RecipesTests
         result = await _sut.GetRecipesByIngredients(req.Object);
         result.ShouldBeAssignableTo<OkObjectResult>();
         var oORV = ((OkObjectResult)result).Value;
-        oORV.ShouldBeAssignableTo<IEnumerable<RecipeGetResponse>>();
-        var entities = (oORV as IEnumerable<RecipeGetResponse>);
-        entities!.Select(x => x.Id).ShouldContain(recipe.Id);
+        oORV.ShouldBeAssignableTo<ApiResponse<IEnumerable<RecipeGetResponse>>>();
+        var entities = (oORV as ApiResponse<IEnumerable<RecipeGetResponse>>);
+        entities!.Result.Select(x => x.Id).ShouldContain(recipe.Id);
     }
 
     public async Task ShouldCreateRecipe()
@@ -90,26 +89,26 @@ public class RecipesTests
         var result = await _sut.CreateRecipe(req.Object);
         result.ShouldBeAssignableTo<BadRequestObjectResult>();
         var resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        var validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(7);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required("Image link"));
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(RecipeCreateRequest.Yield)));
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.InclusiveBetween(nameof(RecipeCreateRequest.Time), 5, 2880));
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(RecipeCreateRequest.Name)));
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(RecipeCreateRequest.Description)));
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(RecipeCreateRequest.Type)));
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(RecipeCreateRequest.Ingredients)));
+        resultObject.ShouldBeAssignableTo<ApiResponse>();
+        var validationFailures = resultObject as ApiResponse;
+        validationFailures!.Errors.Count().ShouldBe(7);
+        validationFailures.Errors.ShouldContain(ValidationError.Required("Image link"));
+        validationFailures.Errors.ShouldContain(ValidationError.Required(nameof(RecipeCreateRequest.Yield)));
+        validationFailures.Errors.ShouldContain(ValidationError.InclusiveBetween(nameof(RecipeCreateRequest.Time), 5, 2880));
+        validationFailures.Errors.ShouldContain(ValidationError.Required(nameof(RecipeCreateRequest.Name)));
+        validationFailures.Errors.ShouldContain(ValidationError.Required(nameof(RecipeCreateRequest.Description)));
+        validationFailures.Errors.ShouldContain(ValidationError.Required(nameof(RecipeCreateRequest.Type)));
+        validationFailures.Errors.ShouldContain(ValidationError.Required(nameof(RecipeCreateRequest.Ingredients)));
 
         recipe.Image = "http://invalid/link";
         req = CreateMockRequest(recipe);
         result = await _sut.CreateRecipe(req.Object);
         result.ShouldBeAssignableTo<BadRequestObjectResult>();
         resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(7);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Invalid("image link"));
+        resultObject.ShouldBeAssignableTo<ApiResponse>();
+        validationFailures = resultObject as ApiResponse;
+        validationFailures!.Errors.Count().ShouldBe(7);
+        validationFailures.Errors.ShouldContain(ValidationError.Invalid("image link"));
 
         recipe.Image = "https://valid/link.png";
         recipe.Yield = "8s";
@@ -117,20 +116,20 @@ public class RecipesTests
         result = await _sut.CreateRecipe(req.Object);
         result.ShouldBeAssignableTo<BadRequestObjectResult>();
         resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(6);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.TooShort(nameof(RecipeCreateRequest.Yield)));
+        resultObject.ShouldBeAssignableTo<ApiResponse>();
+        validationFailures = resultObject as ApiResponse;
+        validationFailures!.Errors.Count().ShouldBe(6);
+        validationFailures.Errors.ShouldContain(ValidationError.TooShort(nameof(RecipeCreateRequest.Yield)));
 
         recipe.Yield = new string('a', 51);
         req = CreateMockRequest(recipe);
         result = await _sut.CreateRecipe(req.Object);
         result.ShouldBeAssignableTo<BadRequestObjectResult>();
         resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(6);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.TooLong(nameof(RecipeCreateRequest.Yield)));
+        resultObject.ShouldBeAssignableTo<ApiResponse>();
+        validationFailures = resultObject as ApiResponse;
+        validationFailures!.Errors.Count().ShouldBe(6);
+        validationFailures.Errors.ShouldContain(ValidationError.TooLong(nameof(RecipeCreateRequest.Yield)));
 
         recipe.Image = "https://valid/link.png";
         recipe.Yield = "8 servings";
@@ -139,10 +138,10 @@ public class RecipesTests
         result = await _sut.CreateRecipe(req.Object);
         result.ShouldBeAssignableTo<BadRequestObjectResult>();
         resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(5);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.InclusiveBetween(nameof(RecipeCreateRequest.Time), 5, 2880));
+        resultObject.ShouldBeAssignableTo<ApiResponse>();
+        validationFailures = resultObject as ApiResponse;
+        validationFailures!.Errors.Count().ShouldBe(5);
+        validationFailures.Errors.ShouldContain(ValidationError.InclusiveBetween(nameof(RecipeCreateRequest.Time), 5, 2880));
 
         recipe.Time = 30;
         recipe.Name = new string('a', 2);
@@ -150,20 +149,20 @@ public class RecipesTests
         result = await _sut.CreateRecipe(req.Object);
         result.ShouldBeAssignableTo<BadRequestObjectResult>();
         resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(4);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.TooShort(nameof(RecipeCreateRequest.Name)));
+        resultObject.ShouldBeAssignableTo<ApiResponse>();
+        validationFailures = resultObject as ApiResponse;
+        validationFailures!.Errors.Count().ShouldBe(4);
+        validationFailures.Errors.ShouldContain(ValidationError.TooShort(nameof(RecipeCreateRequest.Name)));
 
         recipe.Name = new string('a', 51);
         req = CreateMockRequest(recipe);
         result = await _sut.CreateRecipe(req.Object);
         result.ShouldBeAssignableTo<BadRequestObjectResult>();
         resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(4);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.TooLong(nameof(RecipeCreateRequest.Name)));
+        resultObject.ShouldBeAssignableTo<ApiResponse>();
+        validationFailures = resultObject as ApiResponse;
+        validationFailures!.Errors.Count().ShouldBe(4);
+        validationFailures.Errors.ShouldContain(ValidationError.TooLong(nameof(RecipeCreateRequest.Name)));
 
         recipe.Name = "Valid";
         recipe.Type = new string('a', 2);
@@ -171,20 +170,20 @@ public class RecipesTests
         result = await _sut.CreateRecipe(req.Object);
         result.ShouldBeAssignableTo<BadRequestObjectResult>();
         resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(3);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.TooShort(nameof(RecipeCreateRequest.Type)));
+        resultObject.ShouldBeAssignableTo<ApiResponse>();
+        validationFailures = resultObject as ApiResponse;
+        validationFailures!.Errors.Count().ShouldBe(3);
+        validationFailures.Errors.ShouldContain(ValidationError.TooShort(nameof(RecipeCreateRequest.Type)));
 
         recipe.Type = new string('a', 51);
         req = CreateMockRequest(recipe);
         result = await _sut.CreateRecipe(req.Object);
         result.ShouldBeAssignableTo<BadRequestObjectResult>();
         resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(3);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.TooLong(nameof(RecipeCreateRequest.Type)));
+        resultObject.ShouldBeAssignableTo<ApiResponse>();
+        validationFailures = resultObject as ApiResponse;
+        validationFailures!.Errors.Count().ShouldBe(3);
+        validationFailures.Errors.ShouldContain(ValidationError.TooLong(nameof(RecipeCreateRequest.Type)));
 
         recipe.Type = "Valid";
         recipe.Description = "Valid";
@@ -193,22 +192,22 @@ public class RecipesTests
         result = await _sut.CreateRecipe(req.Object);
         result.ShouldBeAssignableTo<BadRequestObjectResult>();
         resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(1);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(RecipeCreateRequest.Ingredients)));
+        resultObject.ShouldBeAssignableTo<ApiResponse>();
+        validationFailures = resultObject as ApiResponse;
+        validationFailures!.Errors.Count().ShouldBe(1);
+        validationFailures.Errors.ShouldContain(ValidationError.Required(nameof(RecipeCreateRequest.Ingredients)));
 
         recipe.Ingredients.Add(new());
         req = CreateMockRequest(recipe);
         result = await _sut.CreateRecipe(req.Object);
         result.ShouldBeAssignableTo<BadRequestObjectResult>();
         resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(3);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(Quantity)));
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(Responses.NotFound(nameof(Ingredient), new Guid()));
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(IngredientRow.Preparation)));
+        resultObject.ShouldBeAssignableTo<ApiResponse>();
+        validationFailures = resultObject as ApiResponse;
+        validationFailures!.Errors.Count().ShouldBe(3);
+        validationFailures.Errors.ShouldContain(ValidationError.Required(nameof(Quantity)));
+        validationFailures.Errors.ShouldContain(Responses.NotFound(nameof(Ingredient), new Guid()));
+        validationFailures.Errors.ShouldContain(ValidationError.Required(nameof(IngredientRow.Preparation)));
 
         var recipeIngredient = recipe.Ingredients.First();
         recipeIngredient.Preparation = new string('a', 51);
@@ -216,10 +215,10 @@ public class RecipesTests
         result = await _sut.CreateRecipe(req.Object);
         result.ShouldBeAssignableTo<BadRequestObjectResult>();
         resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(3);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.TooLong(nameof(IngredientRow.Preparation)));
+        resultObject.ShouldBeAssignableTo<ApiResponse>();
+        validationFailures = resultObject as ApiResponse;
+        validationFailures!.Errors.Count().ShouldBe(3);
+        validationFailures.Errors.ShouldContain(ValidationError.TooLong(nameof(IngredientRow.Preparation)));
 
         recipeIngredient.Preparation = new string('a', 50);
         recipeIngredient.Quantity = new();
@@ -227,11 +226,11 @@ public class RecipesTests
         result = await _sut.CreateRecipe(req.Object);
         result.ShouldBeAssignableTo<BadRequestObjectResult>();
         resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(3);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(Quantity.Value)));
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(Quantity.Unit)));
+        resultObject.ShouldBeAssignableTo<ApiResponse>();
+        validationFailures = resultObject as ApiResponse;
+        validationFailures!.Errors.Count().ShouldBe(3);
+        validationFailures.Errors.ShouldContain(ValidationError.Required(nameof(Quantity.Value)));
+        validationFailures.Errors.ShouldContain(ValidationError.Required(nameof(Quantity.Unit)));
 
         recipeIngredient.Quantity.Value = 1;
         recipeIngredient.Quantity.Unit = new string('a', 11);
@@ -239,10 +238,10 @@ public class RecipesTests
         result = await _sut.CreateRecipe(req.Object);
         result.ShouldBeAssignableTo<BadRequestObjectResult>();
         resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(2);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.TooLong(nameof(Quantity.Unit)));
+        resultObject.ShouldBeAssignableTo<ApiResponse>();
+        validationFailures = resultObject as ApiResponse;
+        validationFailures!.Errors.Count().ShouldBe(2);
+        validationFailures.Errors.ShouldContain(ValidationError.TooLong(nameof(Quantity.Unit)));
 
         recipeIngredient.Quantity.Unit = new string('a', 10);
         var ingredient = await CreateIngredient();
@@ -252,10 +251,10 @@ public class RecipesTests
         result = await _sut.CreateRecipe(req.Object);
         result.ShouldBeAssignableTo<BadRequestObjectResult>();
         resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(1);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(Responses.NotFound(nameof(Material), new Guid()));
+        resultObject.ShouldBeAssignableTo<ApiResponse>();
+        validationFailures = resultObject as ApiResponse;
+        validationFailures!.Errors.Count().ShouldBe(1);
+        validationFailures.Errors.ShouldContain(Responses.NotFound(nameof(Material), new Guid()));
 
         var material = await CreateMaterial();
         recipe.Materials = new() { new() { MaterialId = material.Id } };
@@ -263,10 +262,10 @@ public class RecipesTests
         result = await _sut.CreateRecipe(req.Object);
         result.ShouldBeAssignableTo<OkObjectResult>();
         resultObject = ((OkObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<Guid>();
+        resultObject.ShouldBeAssignableTo<ApiResponse<Guid>>();
 
         req = new Mock<HttpRequest>();
-        result = await _sut.GetRecipe(req.Object, (Guid)resultObject);
+        result = await _sut.GetRecipe(req.Object, ((ApiResponse<Guid>)resultObject).Result);
         result.ShouldNotBeAssignableTo<NotFoundObjectResult>();
     }
 
@@ -297,8 +296,8 @@ public class RecipesTests
         result = await _sut.UpdateRecipe(req.Object);
         result.ShouldBeAssignableTo<OkObjectResult>();
         var recipeResult = ((OkObjectResult)result).Value;
-        recipeResult.ShouldBeAssignableTo<RecipeGetResponse>();
-        (recipeResult as RecipeGetResponse)!.Image.ShouldNotBe(recipe.Image);
-        (recipeResult as RecipeGetResponse)!.Image.ShouldBe(recipeUpdate.Image);
+        recipeResult.ShouldBeAssignableTo<ApiResponse<RecipeGetResponse>>();
+        (recipeResult as ApiResponse<RecipeGetResponse>)!.Result.Image.ShouldNotBe(recipe.Image);
+        (recipeResult as ApiResponse<RecipeGetResponse>)!.Result.Image.ShouldBe(recipeUpdate.Image);
     }
 }

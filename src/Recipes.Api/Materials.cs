@@ -50,7 +50,7 @@ public class Materials
         {
             var response = await _mediator.Send(new MaterialsGetAllRequest());
 
-            return new OkObjectResult(response);
+            return new OkObjectResult(ApiResponse<IEnumerable<Material>>.FromResult(response));
         });
     }
 
@@ -67,7 +67,7 @@ public class Materials
         {
             var response = await _mediator.Send(new MaterialGetRequest { Id = id });
 
-            return new OkObjectResult(response);
+            return new OkObjectResult(ApiResponse<Material>.FromResult(response));
         });
     }
 
@@ -86,7 +86,7 @@ public class Materials
 
             var response = await _mediator.Send(input);
 
-            return new OkObjectResult(response);
+            return new OkObjectResult(ApiResponse<Guid>.FromResult(response));
         });
     }
 
@@ -106,7 +106,7 @@ public class Materials
 
             var response = await _mediator.Send(input);
 
-            return new OkObjectResult(response);
+            return new OkObjectResult(ApiResponse<Material>.FromResult(response));
         });
     }
 }

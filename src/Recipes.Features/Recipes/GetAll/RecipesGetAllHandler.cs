@@ -6,7 +6,7 @@ using Recipes.Features.Recipes.GetById;
 
 namespace Recipes.Features.Recipes.GetAll;
 
-public class RecipesGetAllHandler : IRequestHandler<RecipesGetAllRequest, List<RecipeGetResponse>>
+public class RecipesGetAllHandler : IRequestHandler<RecipesGetAllRequest, IEnumerable<RecipeGetResponse>>
 {
     private readonly IMapper _mapper;
     private readonly DocsContext _docsContext;
@@ -17,7 +17,7 @@ public class RecipesGetAllHandler : IRequestHandler<RecipesGetAllRequest, List<R
         _docsContext = factory.CreateDbContext();
     }
 
-    public Task<List<RecipeGetResponse>> Handle(RecipesGetAllRequest request, CancellationToken cancellationToken)
+    public Task<IEnumerable<RecipeGetResponse>> Handle(RecipesGetAllRequest request, CancellationToken cancellationToken)
     {
         var recipes = _docsContext.Recipes.AsEnumerable();
 

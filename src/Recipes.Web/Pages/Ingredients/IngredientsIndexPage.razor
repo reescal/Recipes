@@ -1,8 +1,10 @@
 ﻿@page "/Ingredients"
+@using Recipes.Features.GroceryList.Get;
 @using Recipes.Features.Ingredients.GetById;
 @using Recipes.Web.Models;
 @using Recipes.Web.Services;
 @inject IIngredientsService _ingredientsService
+@inject IGroceryListService _groceryListService
 @inject NavigationManager _navManager
 
 <GridRow>
@@ -27,7 +29,7 @@
                     <CardMeta Title="@context.Name" />
                 </ChildContent>
                 <ActionTemplate>
-                    <CardAction><Icon Type="shopping-cart" /></CardAction>
+                    <CardAction><Icon Type="shopping-cart" OnClick="@(() => _groceryListService.AddGrocery(AsGrocery(context)))" /></CardAction>
                     <CardAction><Icon Type="profile" /></CardAction>
                     <CardAction><Icon Type="partition" /></CardAction>
                     <CardAction><Icon Type="edit" OnClick="@(() => _navManager.NavigateTo($"/Ingredients/Update/{context.Id}"))" /></CardAction>
@@ -71,4 +73,17 @@
         ingredients
             .Where(x => (x.Type + x.Name).Contains(searchTerm, StringComparison.InvariantCultureIgnoreCase))
             .GroupBy(x => x.Type);
+
+    private HashSet<GroceryResponse> AsGrocery(IngredientGetResponse ingredient) => new HashSet<GroceryResponse>
+    {
+        new()
+        {
+            Ingredient = ingredient,
+            Quantity = new()
+            {
+                Value = 1,
+                Unit = "unit"
+            }
+        }
+    };
 }

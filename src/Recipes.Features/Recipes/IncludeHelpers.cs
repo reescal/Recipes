@@ -14,7 +14,7 @@ public static class IncludeHelpers
         var ingredients = _docsContext.Ingredients.Where(x => ingredientIds.Contains(x.Id)).AsEnumerable();
 
         var materialIds = recipe.Materials.Select(x => x.MaterialId);
-        var materials = _docsContext.Materials.Where(x => materialIds.Contains(x.Id)).ToList();
+        var materials = _docsContext.Materials.Where(x => materialIds.Contains(x.Id)).AsEnumerable();
 
         var response = _mapper.Map<RecipeGetResponse>(recipe);
 
@@ -23,7 +23,7 @@ public static class IncludeHelpers
         return response;
     }
 
-    public static List<RecipeGetResponse> IncludeIngredientsAndMaterials(this IEnumerable<Recipe> recipes, DocsContext _docsContext, IMapper _mapper)
+    public static IEnumerable<RecipeGetResponse> IncludeIngredientsAndMaterials(this IEnumerable<Recipe> recipes, DocsContext _docsContext, IMapper _mapper)
     {
         var response = new List<RecipeGetResponse>();
         foreach (var recipe in recipes)

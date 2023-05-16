@@ -7,7 +7,8 @@ using System.Threading.Tasks;
 
 namespace Recipes.Api;
 
-public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse> where TRequest : IRequest<TResponse>
+public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+    where TRequest : IRequest<TResponse>
 {
     private readonly IEnumerable<IValidator<TRequest>> _validators;
 
@@ -27,7 +28,7 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
             .ToList();
 
         return failures.Any()
-            ? throw new ValidationException(failures)
+            ? throw new FluentValidation.ValidationException(failures)
             : next();
     }
 }

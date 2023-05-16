@@ -50,7 +50,7 @@ public class Ingredients
         {
             var response = await _mediator.Send(new IngredientsGetAllRequest());
 
-            return new OkObjectResult(response);
+            return new OkObjectResult(ApiResponse<IEnumerable<Ingredient>>.FromResult(response));
         });
     }
 
@@ -67,7 +67,7 @@ public class Ingredients
         {
             var response = await _mediator.Send(new IngredientGetRequest { Id = id });
 
-            return new OkObjectResult(response);
+            return new OkObjectResult(ApiResponse<Ingredient>.FromResult(response));
         });
     }
 
@@ -86,7 +86,7 @@ public class Ingredients
 
             var response = await _mediator.Send(input);
 
-            return new OkObjectResult(response);
+            return new OkObjectResult(ApiResponse<Guid>.FromResult(response));
         });
     }
 
@@ -105,7 +105,7 @@ public class Ingredients
 
             var response = await _mediator.Send(input);
 
-            return new OkObjectResult(response);
+            return new OkObjectResult(ApiResponse<Ingredient>.FromResult(response));
         });
     }
 }

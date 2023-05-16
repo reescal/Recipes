@@ -1,21 +1,18 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using static Recipes.Tests.Testing;
 using Recipes.Api;
-using Recipes.Shared.Models;
 using Shouldly;
 using Microsoft.AspNetCore.Http;
 using Moq;
-using FluentValidation.Results;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Recipes.Shared.Constants;
 using MediatR;
-using Recipes.Data.Entities;
 using Recipes.Features.Materials.Create;
 using Recipes.Features.Materials.Update;
 using Recipes.Features.Materials.GetById;
 
-namespace Recipes.Tests.Model;
+namespace Recipes.Tests;
 
 public class MaterialsTests
 {
@@ -36,7 +33,7 @@ public class MaterialsTests
 
         result.ShouldBeAssignableTo<OkObjectResult>();
         var materials = ((OkObjectResult)result).Value;
-        materials.ShouldBeAssignableTo<IEnumerable<MaterialGetResponse>>();
+        materials.ShouldBeAssignableTo<ApiResponse<IEnumerable<MaterialGetResponse>>>();
     }
 
     public async Task ShouldGetMaterial()
@@ -51,8 +48,8 @@ public class MaterialsTests
         result = await _sut.GetMaterial(req.Object, material.Id);
         result.ShouldBeAssignableTo<OkObjectResult>();
         var materialResult = ((OkObjectResult)result).Value;
-        materialResult.ShouldBeAssignableTo<MaterialGetResponse>();
-        material.Id.ShouldBe((materialResult as MaterialGetResponse)!.Id);
+        materialResult.ShouldBeAssignableTo<ApiResponse<MaterialGetResponse>>();
+        material.Id.ShouldBe((materialResult as ApiResponse<MaterialGetResponse>)!.Result.Id);
     }
 
     public async Task ShouldCreateMaterial()
@@ -63,20 +60,20 @@ public class MaterialsTests
         var result = await _sut.CreateMaterial(req.Object);
         result.ShouldBeAssignableTo<BadRequestObjectResult>();
         var resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        var validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(4);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required("Image link"));
+        resultObject.ShouldBeAssignableTo<ApiResponse>();
+        var validationFailures = resultObject as ApiResponse;
+        validationFailures!.Errors.Count().ShouldBe(4);
+        validationFailures.Errors.ShouldContain(ValidationError.Required("Image link"));
 
         material.Image = "http://invalid/link";
         req = CreateMockRequest(material);
         result = await _sut.CreateMaterial(req.Object);
         result.ShouldBeAssignableTo<BadRequestObjectResult>();
         resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(4);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Invalid("image link"));
+        resultObject.ShouldBeAssignableTo<ApiResponse>();
+        validationFailures = resultObject as ApiResponse;
+        validationFailures!.Errors.Count().ShouldBe(4);
+        validationFailures.Errors.ShouldContain(ValidationError.Invalid("image link"));
 
         material.Image = "https://valid/link.png";
         material.Name = string.Empty;
@@ -84,30 +81,30 @@ public class MaterialsTests
         result = await _sut.CreateMaterial(req.Object);
         result.ShouldBeAssignableTo<BadRequestObjectResult>();
         resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(3);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(MaterialCreateRequest.Name)));
+        resultObject.ShouldBeAssignableTo<ApiResponse>();
+        validationFailures = resultObject as ApiResponse;
+        validationFailures!.Errors.Count().ShouldBe(3);
+        validationFailures.Errors.ShouldContain(ValidationError.Required(nameof(MaterialCreateRequest.Name)));
 
         material.Name = "Aa";
         req = CreateMockRequest(material);
         result = await _sut.CreateMaterial(req.Object);
         result.ShouldBeAssignableTo<BadRequestObjectResult>();
         resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(3);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.TooShort(nameof(MaterialCreateRequest.Name)));
+        resultObject.ShouldBeAssignableTo<ApiResponse>();
+        validationFailures = resultObject as ApiResponse;
+        validationFailures!.Errors.Count().ShouldBe(3);
+        validationFailures.Errors.ShouldContain(ValidationError.TooShort(nameof(MaterialCreateRequest.Name)));
 
         material.Name = new string('a', 51);
         req = CreateMockRequest(material);
         result = await _sut.CreateMaterial(req.Object);
         result.ShouldBeAssignableTo<BadRequestObjectResult>();
         resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(3);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.TooLong(nameof(MaterialCreateRequest.Name)));
+        resultObject.ShouldBeAssignableTo<ApiResponse>();
+        validationFailures = resultObject as ApiResponse;
+        validationFailures!.Errors.Count().ShouldBe(3);
+        validationFailures.Errors.ShouldContain(ValidationError.TooLong(nameof(MaterialCreateRequest.Name)));
 
         material.Name = "Valid";
         material.Description = string.Empty;
@@ -115,10 +112,10 @@ public class MaterialsTests
         result = await _sut.CreateMaterial(req.Object);
         result.ShouldBeAssignableTo<BadRequestObjectResult>();
         resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(2);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(MaterialCreateRequest.Description)));
+        resultObject.ShouldBeAssignableTo<ApiResponse>();
+        validationFailures = resultObject as ApiResponse;
+        validationFailures!.Errors.Count().ShouldBe(2);
+        validationFailures.Errors.ShouldContain(ValidationError.Required(nameof(MaterialCreateRequest.Description)));
 
         material.Description = "Valid";
         material.Type = string.Empty;
@@ -126,40 +123,40 @@ public class MaterialsTests
         result = await _sut.CreateMaterial(req.Object);
         result.ShouldBeAssignableTo<BadRequestObjectResult>();
         resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(1);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.Required(nameof(MaterialCreateRequest.Type)));
+        resultObject.ShouldBeAssignableTo<ApiResponse>();
+        validationFailures = resultObject as ApiResponse;
+        validationFailures!.Errors.Count().ShouldBe(1);
+        validationFailures.Errors.ShouldContain(ValidationError.Required(nameof(MaterialCreateRequest.Type)));
 
         material.Type = "Aa";
         req = CreateMockRequest(material);
         result = await _sut.CreateMaterial(req.Object);
         result.ShouldBeAssignableTo<BadRequestObjectResult>();
         resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(1);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.TooShort(nameof(MaterialCreateRequest.Type)));
+        resultObject.ShouldBeAssignableTo<ApiResponse>();
+        validationFailures = resultObject as ApiResponse;
+        validationFailures!.Errors.Count().ShouldBe(1);
+        validationFailures.Errors.ShouldContain(ValidationError.TooShort(nameof(MaterialCreateRequest.Type)));
 
         material.Type = new string('a', 51);
         req = CreateMockRequest(material);
         result = await _sut.CreateMaterial(req.Object);
         result.ShouldBeAssignableTo<BadRequestObjectResult>();
         resultObject = ((BadRequestObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<List<ValidationFailure>>();
-        validationFailures = resultObject as List<ValidationFailure>;
-        validationFailures!.Count.ShouldBe(1);
-        validationFailures.Select(x => x.ErrorMessage).ShouldContain(ValidationError.TooLong(nameof(MaterialCreateRequest.Type)));
+        resultObject.ShouldBeAssignableTo<ApiResponse>();
+        validationFailures = resultObject as ApiResponse;
+        validationFailures!.Errors.Count().ShouldBe(1);
+        validationFailures.Errors.ShouldContain(ValidationError.TooLong(nameof(MaterialCreateRequest.Type)));
 
         material.Type = "Valid";
         req = CreateMockRequest(material);
         result = await _sut.CreateMaterial(req.Object);
         result.ShouldBeAssignableTo<OkObjectResult>();
         resultObject = ((OkObjectResult)result).Value;
-        resultObject.ShouldBeAssignableTo<Guid>();
+        resultObject.ShouldBeAssignableTo<ApiResponse<Guid>>();
 
         req = new Mock<HttpRequest>();
-        result = await _sut.GetMaterial(req.Object, (Guid)resultObject);
+        result = await _sut.GetMaterial(req.Object, ((ApiResponse<Guid>)resultObject).Result);
         result.ShouldNotBeAssignableTo<NotFoundObjectResult>();
     }
 
@@ -190,8 +187,8 @@ public class MaterialsTests
 
         result.ShouldBeAssignableTo<OkObjectResult>();
         var materialResult = ((OkObjectResult)result).Value;
-        materialResult.ShouldBeAssignableTo<MaterialGetResponse>();
-        (materialResult as MaterialGetResponse)!.Image.ShouldNotBe(material.Image);
-        (materialResult as MaterialGetResponse)!.Image.ShouldBe(materialUpdate.Image);
+        materialResult.ShouldBeAssignableTo<ApiResponse<MaterialGetResponse>>();
+        (materialResult as ApiResponse<MaterialGetResponse>)!.Result.Image.ShouldNotBe(material.Image);
+        (materialResult as ApiResponse<MaterialGetResponse>)!.Result.Image.ShouldBe(materialUpdate.Image);
     }
 }

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Recipes.Shared;
 using System;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -16,14 +17,15 @@ public class HttpFunctionExecutor : IHttpFunctionExecutor
         }
         catch (ValidationException ex)
         {
-            return new BadRequestObjectResult(string.Join('\n', ex.Errors));
+            return new BadRequestObjectResult(new ApiResponse(ex.Errors.Select(x => x.ErrorMessage)));
         }
         catch (ApiException ex)
         {
+            var response = new ApiResponse(ex.ReasonPhrase);
             return ex.StatusCode switch
             {
-                HttpStatusCode.BadRequest => new BadRequestObjectResult(ex.ReasonPhrase),
-                HttpStatusCode.NotFound => new NotFoundObjectResult(ex.ReasonPhrase),
+                HttpStatusCode.BadRequest => new BadRequestObjectResult(response),
+                HttpStatusCode.NotFound => new NotFoundObjectResult(response),
                 _ => new BadRequestResult(),
             };
         }

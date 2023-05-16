@@ -9,13 +9,12 @@ public class IngredientsService : IIngredientsService
 {
     private readonly HttpClient _httpClient;
     private const string api = "api/Ingredients/";
+    private IEnumerable<IngredientGetResponse> Ingredients;
 
     public IngredientsService(IHttpClientFactory clientFactory)
     {
         _httpClient = clientFactory.CreateClient("API");
     }
-
-    private IEnumerable<IngredientGetResponse> Ingredients;
 
     public async Task<IEnumerable<IngredientGetResponse>> Get()
     {

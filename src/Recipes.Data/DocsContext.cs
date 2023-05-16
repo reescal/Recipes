@@ -14,6 +14,7 @@ public class DocsContext : DbContext
     public DbSet<Ingredient> Ingredients { get; set; }
     public DbSet<Material> Materials { get; set; }
     public DbSet<Recipe> Recipes { get; set; }
+    public DbSet<GroceryList> GroceryList { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -27,5 +28,8 @@ public class DocsContext : DbContext
             .OwnsMany(x => x.Ingredients);
         modelBuilder.Entity<Recipe>()
             .OwnsMany(x => x.Materials);
+        modelBuilder.Entity<GroceryList>()
+            .HasPartitionKey(x => x.Id)
+            .OwnsMany(x => x.Grocery);
     }
 }

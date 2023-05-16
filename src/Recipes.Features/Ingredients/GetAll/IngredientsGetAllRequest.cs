@@ -3,6 +3,6 @@ using Recipes.Features.Ingredients.GetById;
 
 namespace Recipes.Features.Ingredients.GetAll;
 
-public class IngredientsGetAllRequest : IRequest<List<IngredientGetResponse>>
+public class IngredientsGetAllRequest : IRequest<IEnumerable<IngredientGetResponse>>
 {
 }
