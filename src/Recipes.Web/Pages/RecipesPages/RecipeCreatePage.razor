@@ -1,0 +1,47 @@
+﻿@page "/Recipes/Create"
+
+<GridRow>
+    <GridCol Offset="8" Span="8">
+        <Title Level="4" Style="text-align: center; border-bottom: 1px #1890FF solid">Create Recipe</Title>
+    </GridCol>
+</GridRow>
+<Form Model="@recipe" @ref="@_form" LabelColSpan="2" WrapperColSpan="6" LabelColOffset="8" OnFinish="OnFinish">
+    <Validator>
+        <FluentValidationValidator />
+    </Validator>
+    <ChildContent>
+        <FormItem Label="Name">
+            <Input @bind-Value="@context.Name" />
+        </FormItem>
+        <FormItem Label="Image">
+            <Input @bind-Value="context.Image" />
+        </FormItem>
+        <FormItem Label="Video">
+            <Input @bind-Value="context.Video" />
+        </FormItem>
+        <FormItem Label="Yield">
+            <Input @bind-Value="context.Yield" />
+        </FormItem>
+        <FormItem Label="Time">
+            <AntDesign.InputNumber Min="5" Max="995" Step="5" @bind-Value="context.Time" />
+        </FormItem>
+        <FormItem Label="Description">
+            <TextArea @bind-Value="@context.Description" />
+        </FormItem>
+        <FormItem Label="Preparation">
+            <TextArea @bind-Value="@context.Preparation" />
+        </FormItem>
+        <FormItem Label="Type">
+            <AutoComplete @bind-Value="@context.Type" Options="@RecipeTypes" />
+        </FormItem>
+        <FormItem WrapperColOffset="10" WrapperColSpan="2">
+            <Button Type="@ButtonType.Primary" HtmlType="submit" Disabled="submitDisabled">
+                Submit
+            </Button>
+        </FormItem>
+    </ChildContent>
+</Form>
+
+@code {
+
+}

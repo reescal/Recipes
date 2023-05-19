@@ -1,25 +1,20 @@
 ﻿@page "/Materials"
 @using Recipes.Features.Materials.GetById;
-@using Recipes.Web.Models;
-@using Recipes.Web.Services;
-@inject IMaterialsService _materialsService
-@inject NavigationManager _navManager
 
 <GridRow>
     <GridCol Flex=@("auto")>
-        <AutoCompleteSimpleEntity Entities="entities" @bind-SearchTerm="searchTerm" />
+        <AutoComplete Options="materialNames">
+            <AutoCompleteSearch @bind-Value="@searchTerm" />
+        </AutoComplete>
     </GridCol>
     <GridCol Flex=@("32px")>
         <Button Type="@ButtonType.Default" Icon="@IconType.Outline.Plus" OnClick="@(() => _navManager.NavigateTo("/Materials/Create"))" />
     </GridCol>
 </GridRow>
 
-@foreach (var group in filteredMaterials)
-{
-    <Divider Orientation="left" Style="font-weight:bold">@group.Key</Divider>
-    <AntList Grid="grid" DataSource="@group">
-        <ListItem>
-            <Card Size="small" Hoverable Bordered>
+<AntList Grid="grid" DataSource="@filteredMaterials">
+    <ListItem>
+        <Card Size="small" Hoverable Bordered>
             <Cover>
                 <img src="@context.Image" />
             </Cover>
@@ -35,40 +30,7 @@
         </Card>
     </ListItem>
 </AntList>
-}
+
 
 @code {
-    private IEnumerable<MaterialGetResponse> materials { get; set; } = new List<MaterialGetResponse>();
-
-    private string searchTerm = string.Empty;
-
-    private ListGridType grid = new()
-        {
-            Gutter = 16,
-            Xs = 1,
-            Sm = 2,
-            Md = 4,
-            Lg = 4,
-            Xl = 6,
-            Xxl = 3,
-        };
-
-    protected override async Task OnInitializedAsync() => materials = await _materialsService.Get();
-
-    private IOrderedEnumerable<SimpleEntity> entities => materials
-                                                            .Select(i => new SimpleEntity
-                                                                {
-                                                                    Id = i.Id,
-                                                                    Name = i.Name,
-                                                                    Type = i.Type
-                                                                })
-                                                            .OrderBy(x => x.Type)
-                                                            .ThenBy(x => x.Name);
-
-    private IEnumerable<IGrouping<string, MaterialGetResponse>> filteredMaterials =>
-        string.IsNullOrEmpty(searchTerm) ?
-        materials.GroupBy(x => x.Type) :
-        materials
-            .Where(x => (x.Type + x.Name).Contains(searchTerm, StringComparison.InvariantCultureIgnoreCase))
-            .GroupBy(x => x.Type);
 }

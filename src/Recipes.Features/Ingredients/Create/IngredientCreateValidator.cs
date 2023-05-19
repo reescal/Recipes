@@ -9,7 +9,7 @@ public  class IngredientCreateValidator : AbstractValidator<IngredientCreateRequ
     {
         RuleFor(p => p.Image).NotEmpty()
                             .WithMessage(ValidationError.Required("Image link"));
-        RuleFor(p => p.Image).Must(BeUri)
+        RuleFor(p => p.Image).Must(BeImageUri)
                             .When(p => !string.IsNullOrWhiteSpace(p.Image))
                             .WithMessage(ValidationError.Invalid("image link"));
         RuleFor(p => p.Name).NotEmpty()
@@ -30,5 +30,10 @@ public  class IngredientCreateValidator : AbstractValidator<IngredientCreateRequ
         RuleFor(p => p.Type).MaximumLength(50)
                             .When(p => !string.IsNullOrWhiteSpace(p.Type))
                             .WithMessage(ValidationError.TooLong(nameof(IngredientCreateRequest.Type)));
+        RuleFor(p => p.NutritionalInfo).NotEmpty()
+                                        .WithMessage(ValidationError.Required("Nutritional info"));
+        RuleFor(p => p.NutritionalInfo).Must(BeUri)
+                                        .When(p => !string.IsNullOrWhiteSpace(p.NutritionalInfo))
+                                        .WithMessage(ValidationError.Invalid("Nutritional info"));
     }
 }

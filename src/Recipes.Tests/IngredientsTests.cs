@@ -11,6 +11,7 @@ using MediatR;
 using Recipes.Features.Ingredients.Create;
 using Recipes.Features.Ingredients.Update;
 using Recipes.Features.Ingredients.GetById;
+using Recipes.Shared;
 
 namespace Recipes.Tests;
 
@@ -63,7 +64,7 @@ public class IngredientsTests
         var resultObject = ((BadRequestObjectResult)result).Value;
         resultObject.ShouldBeAssignableTo<ApiResponse>();
         var validationFailures = resultObject as ApiResponse;
-        validationFailures!.Errors.Count().ShouldBe(4);
+        validationFailures!.Errors.Count().ShouldBe(5);
         validationFailures.Errors.ShouldContain(ValidationError.Required("Image link"));
 
         ingredient.Image = "http://invalid/link";
@@ -73,20 +74,23 @@ public class IngredientsTests
         resultObject = ((BadRequestObjectResult)result).Value;
         resultObject.ShouldBeAssignableTo<ApiResponse>();
         validationFailures = resultObject as ApiResponse;
-        validationFailures!.Errors.Count().ShouldBe(4);
+        validationFailures!.Errors.Count().ShouldBe(5);
         validationFailures.Errors.ShouldContain(ValidationError.Invalid("image link"));
+        validationFailures.Errors.ShouldContain(ValidationError.Required("Nutritional info"));
 
         ingredient.Image = "https://valid/link.png";
-        ingredient.Name = string.Empty;
+        ingredient.NutritionalInfo = "http://invalid/link";
         req = CreateMockRequest(ingredient);
         result = await _sut.CreateIngredient(req.Object);
         result.ShouldBeAssignableTo<BadRequestObjectResult>();
         resultObject = ((BadRequestObjectResult)result).Value;
         resultObject.ShouldBeAssignableTo<ApiResponse>();
         validationFailures = resultObject as ApiResponse;
-        validationFailures!.Errors.Count().ShouldBe(3);
+        validationFailures!.Errors.Count().ShouldBe(4);
+        validationFailures.Errors.ShouldContain(ValidationError.Invalid("Nutritional info"));
         validationFailures.Errors.ShouldContain(ValidationError.Required(nameof(IngredientCreateRequest.Name)));
 
+        ingredient.NutritionalInfo = "https://valid/link.png";
         ingredient.Name = new string('a', 2);
         req = CreateMockRequest(ingredient);
         result = await _sut.CreateIngredient(req.Object);

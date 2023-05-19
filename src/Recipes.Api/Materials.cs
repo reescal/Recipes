@@ -19,6 +19,7 @@ using Recipes.Features.Materials.GetById;
 using Recipes.Features.Materials.Create;
 using Recipes.Features.Materials.Update;
 using Recipes.Data.Entities;
+using Recipes.Shared;
 
 namespace Recipes.Api;
 

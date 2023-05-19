@@ -1,13 +1,4 @@
 ﻿@page "/Ingredients/Update/{Id:guid}"
-@using Recipes.Data.Entities;
-@using Recipes.Features.Ingredients.GetById;
-@using Recipes.Features.Ingredients.Update;
-@using Recipes.Web.Services;
-@using Recipes.Web.Validation
-@using static Recipes.Shared.Constants.Responses;
-@inject IIngredientsService _ingredientsService
-@inject IMessageService _message
-@inject NavigationManager _navManager
 
 @if(ingredient == null || ingredient?.Id == Guid.Empty)
 {
@@ -51,52 +42,5 @@ else
 }
 
 @code {
-    [Parameter]
-    public Guid Id { get; set; }
-    private Form<IngredientUpdateRequest> _form;
-
-    private IngredientUpdateRequest ingredientUpdate = new IngredientUpdateRequest();
-
-    private IEnumerable<IngredientGetResponse> ingredients { get; set; } = new List<IngredientGetResponse>();
-    private IngredientGetResponse ingredient { get; set; } = new();
-
-    private bool submitDisabled;
-
     RenderFragment loadingIcon = @<Icon Type="loading" Theme="outline" Style="font-size: 24px" Spin />;
-
-    protected override async Task OnInitializedAsync() => ingredients = await _ingredientsService.Get();
-
-    protected override async Task OnParametersSetAsync()
-    {
-        ingredient = ingredients.FirstOrDefault(x => x.Id == Id);
-        if(ingredient == null)
-        {
-            await _message.Error(NotFound(nameof(Ingredient), Id));
-            _navManager.NavigateTo("/Ingredients");
-        }
-    }
-
-    private HashSet<string> IngredientTypes => ingredients.Select(i => i.Type).ToHashSet();
-
-    private async Task OnFinish(EditContext editContext)
-    {
-        submitDisabled = true;
-        var result = await _ingredientsService.Update(ingredientUpdate);
-        if (result.Valid)
-        {
-            await _message.Success(result.Message);
-            _navManager.NavigateTo("/Ingredients");
-        }
-        else
-        {
-            var errors = result.Message.Split('\n');
-            var tasks = new List<Task>();
-            foreach (var error in errors)
-            {
-                tasks.Add(_message.Error(error));
-            }
-            await Task.WhenAll(tasks);
-        }
-        submitDisabled = false;
-    }
 }

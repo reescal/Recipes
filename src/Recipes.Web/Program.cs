@@ -16,6 +16,7 @@ builder.Services.AddValidatorsFromAssemblyContaining<IngredientGetValidator>();
 builder.Services.AddScoped<IIngredientsService, IngredientsService>();
 builder.Services.AddScoped<IMaterialsService, MaterialsService>();
 builder.Services.AddScoped<IGroceryListService, GroceryListService>();
+builder.Services.AddScoped<IRecipesService, RecipesService>();
 
 builder.Services.AddAntDesign();
 

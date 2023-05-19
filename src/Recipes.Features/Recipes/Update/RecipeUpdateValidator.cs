@@ -4,7 +4,6 @@ using Recipes.Data;
 using Recipes.Shared.Constants;
 using static Recipes.Shared.Models.ValidatorHelpers.ValidatorHelpers;
 using Recipes.Features.Recipes.Create;
-using Recipes.Shared.Models;
 
 namespace Recipes.Features.Recipes.Update;
 public class RecipeUpdateValidator : AbstractValidator<RecipeUpdateRequest>
@@ -14,9 +13,12 @@ public class RecipeUpdateValidator : AbstractValidator<RecipeUpdateRequest>
         var _docsContext = factory.CreateDbContext();
         RuleFor(p => p.Image).NotEmpty()
                                 .WithMessage(ValidationError.Required("Image link"));
-        RuleFor(p => p.Image).Must(BeUri)
+        RuleFor(p => p.Image).Must(BeImageUri)
                                 .When(p => !string.IsNullOrWhiteSpace(p.Image))
                                 .WithMessage(ValidationError.Invalid("image link"));
+        RuleFor(p => p.Video).Must(BeUri)
+                                .When(p => !string.IsNullOrWhiteSpace(p.Video))
+                                .WithMessage(ValidationError.Invalid("video link"));
         RuleFor(p => p.Yield).NotEmpty()
                                 .WithMessage(ValidationError.Required(nameof(RecipeCreateRequest.Yield)));
         RuleFor(p => p.Time).InclusiveBetween(5, 2880)
@@ -30,6 +32,8 @@ public class RecipeUpdateValidator : AbstractValidator<RecipeUpdateRequest>
                             .When(p => !string.IsNullOrWhiteSpace(p.Name))
                             .WithMessage(ValidationError.TooLong(nameof(RecipeCreateRequest.Name)));
         RuleFor(p => p.Description).NotEmpty()
+                                    .WithMessage(ValidationError.Required(nameof(RecipeCreateRequest.Description)));
+        RuleFor(p => p.Preparation).NotEmpty()
                                     .WithMessage(ValidationError.Required(nameof(RecipeCreateRequest.Description)));
         RuleFor(p => p.Type).NotEmpty()
                             .WithMessage(ValidationError.Required(nameof(RecipeCreateRequest.Type)));

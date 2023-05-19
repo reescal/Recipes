@@ -11,6 +11,7 @@ using MediatR;
 using Recipes.Features.Materials.Create;
 using Recipes.Features.Materials.Update;
 using Recipes.Features.Materials.GetById;
+using Recipes.Shared;
 
 namespace Recipes.Tests;
 

@@ -7,4 +7,5 @@ public class Ingredient
     public string Name { get; set; }
     public string Description { get; set; }
     public string Type { get; set; }
+    public string NutritionalInfo { get; set; }
 }

@@ -1,7 +1,5 @@
 ﻿@page "/GroceryList"
 @using Recipes.Features.GroceryList.Get;
-@using Recipes.Web.Services;
-@inject IGroceryListService _groceryListService
 
 <Table Title="Grocery List" TItem="GroceryResponse" DataSource="@groceryList.Grocery">
     <ColumnDefinitions>
@@ -72,16 +70,4 @@
 </style>
 
 @code {
-    private GetGroceryListResponse groceryList = new();
-    private Guid editId;
-
-    protected override async Task OnInitializedAsync() => groceryList = await _groceryListService.Get();
-
-    private void Delete(GroceryResponse grocery) => groceryList.Grocery.Remove(grocery);
-
-    private void startEdit(Guid id) => editId = id;
-
-    private void stopEdit() => editId = Guid.Empty;
-
-    private async Task Update() => await _groceryListService.Update(groceryList.Grocery);
 }

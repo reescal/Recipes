@@ -9,7 +9,7 @@ public class MaterialCreateValidator : AbstractValidator<MaterialCreateRequest>
     {
         RuleFor(p => p.Image).NotEmpty()
                             .WithMessage(ValidationError.Required("Image link"));
-        RuleFor(p => p.Image).Must(BeUri)
+        RuleFor(p => p.Image).Must(BeImageUri)
                             .When(p => !string.IsNullOrWhiteSpace(p.Image))
                             .WithMessage(ValidationError.Invalid("image link"));
         RuleFor(p => p.Name).NotEmpty()
@@ -22,13 +22,5 @@ public class MaterialCreateValidator : AbstractValidator<MaterialCreateRequest>
                             .WithMessage(ValidationError.TooLong(nameof(MaterialCreateRequest.Name)));
         RuleFor(p => p.Description).NotEmpty()
                                     .WithMessage(ValidationError.Required(nameof(MaterialCreateRequest.Description)));
-        RuleFor(p => p.Type).NotEmpty()
-                            .WithMessage(ValidationError.Required(nameof(MaterialCreateRequest.Type)));
-        RuleFor(p => p.Type).MinimumLength(3)
-                            .When(p => !string.IsNullOrWhiteSpace(p.Type))
-                            .WithMessage(ValidationError.TooShort(nameof(MaterialCreateRequest.Type)));
-        RuleFor(p => p.Type).MaximumLength(50)
-                            .When(p => !string.IsNullOrWhiteSpace(p.Type))
-                            .WithMessage(ValidationError.TooLong(nameof(MaterialCreateRequest.Type)));
     }
 }

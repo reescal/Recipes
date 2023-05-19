@@ -15,9 +15,12 @@ public class RecipeCreateValidator : AbstractValidator<RecipeCreateRequest>
         var _docsContext = factory.CreateDbContext();
         RuleFor(p => p.Image).NotEmpty()
                                 .WithMessage(ValidationError.Required("Image link"));
-        RuleFor(p => p.Image).Must(BeUri)
+        RuleFor(p => p.Image).Must(BeImageUri)
                                 .When(p => !string.IsNullOrWhiteSpace(p.Image))
                                 .WithMessage(ValidationError.Invalid("image link"));
+        RuleFor(p => p.Video).Must(BeUri)
+                                .When(p => !string.IsNullOrWhiteSpace(p.Video))
+                                .WithMessage(ValidationError.Invalid("video link"));
         RuleFor(p => p.Yield).NotEmpty()
                                 .WithMessage(ValidationError.Required(nameof(RecipeCreateRequest.Yield)));
         RuleFor(p => p.Yield).MinimumLength(3)
@@ -37,6 +40,8 @@ public class RecipeCreateValidator : AbstractValidator<RecipeCreateRequest>
                             .When(p => !string.IsNullOrWhiteSpace(p.Name))
                             .WithMessage(ValidationError.TooLong(nameof(RecipeCreateRequest.Name)));
         RuleFor(p => p.Description).NotEmpty()
+                                    .WithMessage(ValidationError.Required(nameof(RecipeCreateRequest.Description)));
+        RuleFor(p => p.Preparation).NotEmpty()
                                     .WithMessage(ValidationError.Required(nameof(RecipeCreateRequest.Description)));
         RuleFor(p => p.Type).NotEmpty()
                             .WithMessage(ValidationError.Required(nameof(RecipeCreateRequest.Type)));

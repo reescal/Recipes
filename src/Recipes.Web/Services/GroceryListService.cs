@@ -1,4 +1,5 @@
 ﻿using Recipes.Features.GroceryList.Get;
+using Recipes.Shared;
 using System.Net.Http.Json;
 
 namespace Recipes.Web.Services;
@@ -16,11 +17,11 @@ public class GroceryListService : IGroceryListService
 
     public async Task<GetGroceryListResponse> Get()
     {
-        GroceryList ??= await _httpClient.GetFromJsonAsync<GetGroceryListResponse>(api);
+        GroceryList ??= (await _httpClient.GetFromJsonAsync<ApiResponse<GetGroceryListResponse>>(api)).Result;
         return GroceryList;
     }
 
-    public async Task<(bool Valid, string Message)> AddGrocery(HashSet<GroceryResponse> request)
+    public async Task<bool> AddGrocery(HashSet<GroceryResponse> request)
     {
         var response = await _httpClient.PostAsJsonAsync(api + nameof(AddGrocery), request);
         if (response.IsSuccessStatusCode)
@@ -34,21 +35,21 @@ public class GroceryListService : IGroceryListService
                     GroceryList.Grocery.Add(grocery);
             }
         }
-        return (response.IsSuccessStatusCode, await response.Content.ReadAsStringAsync());
+        return response.IsSuccessStatusCode;
     }
 
-    public async Task<(bool Valid, string Message)> Update(HashSet<GroceryResponse> request)
+    public async Task<bool> Update(HashSet<GroceryResponse> request)
     {
         var response = await _httpClient.PutAsJsonAsync(api, request);
         if (response.IsSuccessStatusCode)
             GroceryList.Grocery = request;
-        return (response.IsSuccessStatusCode, await response.Content.ReadAsStringAsync());
+        return response.IsSuccessStatusCode;
     }
 }
 
 public interface IGroceryListService
 {
     Task<GetGroceryListResponse> Get();
-    Task<(bool Valid, string Message)> AddGrocery(HashSet<GroceryResponse> request);
-    Task<(bool Valid, string Message)> Update(HashSet<GroceryResponse> request);
+    Task<bool> AddGrocery(HashSet<GroceryResponse> request);
+    Task<bool> Update(HashSet<GroceryResponse> request);
 }

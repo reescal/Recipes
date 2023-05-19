@@ -12,6 +12,7 @@ public class RecipeUpdateRequest : IRequest<RecipeGetResponse>
     public int Time { get; set; }
     public string Name { get; set; }
     public string Description { get; set; }
+    public string Preparation { get; set; }
     public string Type { get; set; }
     public List<string> Tags { get; set; }
     public List<IngredientRow> Ingredients { get; set; }

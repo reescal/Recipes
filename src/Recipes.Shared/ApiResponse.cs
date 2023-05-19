@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Recipes.Api;
+﻿namespace Recipes.Shared;
 
 public class ApiResponse
 {

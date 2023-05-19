@@ -20,6 +20,7 @@ using Recipes.Features.Recipes.GetByIngredients;
 using Recipes.Features.Recipes.Create;
 using Recipes.Data.Entities;
 using Recipes.Features.Recipes.Update;
+using Recipes.Shared;
 
 namespace Recipes.Api;
 
@@ -112,7 +113,7 @@ public class Recipes
     [FunctionName(nameof(UpdateRecipe))]
     [OpenApiOperation(operationId: nameof(UpdateRecipe), tags: new[] { _name })]
     [OpenApiRequestBody(contentType: json, bodyType: typeof(RecipeUpdateRequest), Description = nameof(Recipe), Required = true)]
-    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: json, bodyType: typeof(Recipe), Description = "The OK response")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: json, bodyType: typeof(RecipeGetResponse), Description = "The OK response")]
     public async Task<IActionResult> UpdateRecipe(
         [HttpTrigger(AuthorizationLevel.Anonymous, put, Route = _name)] HttpRequest req)
     {

@@ -1,0 +1,63 @@
+﻿@page "/Recipes/"
+@using Recipes.Features.Recipes.GetById;
+
+@if (recipes == null)
+{
+    <GridRow Justify="center">
+        <GridCol>
+            <Spin Indicator="loadingIcon" />
+        </GridCol>
+    </GridRow>
+}
+else
+{
+    <GridRow>
+        <GridCol Flex=@("auto")>
+            <AutoComplete Options="recipeNames">
+                <AutoCompleteSearch @bind-Value="@searchName" />
+            </AutoComplete>
+        </GridCol>
+        <GridCol Flex=@("auto")>
+            <Select Mode="multiple" @bind-Values="selectedTypes" TItemValue="string" TItem="string" DataSource="recipeTypes" EnableSearch AllowClear />
+        </GridCol>
+        <GridCol Flex=@("auto")>
+            <Select Mode="multiple" @bind-Values="selectedIngredients" TItemValue="string" TItem="string" DataSource="recipeIngredients" EnableSearch AllowClear />
+        </GridCol>
+        <GridCol Flex=@("auto")>
+            <Select Mode="multiple" @bind-Values="selectedMaterials" TItemValue="string" TItem="string" DataSource="recipeMaterials" EnableSearch AllowClear />
+        </GridCol>
+        <GridCol Flex=@("auto")>
+            <Select Mode="multiple" @bind-Values="selectedTags" TItemValue="string" TItem="string" DataSource="recipeTags" EnableSearch AllowClear />
+        </GridCol>
+        <GridCol Flex=@("32px")>
+            <Button Type="@ButtonType.Default" Icon="@IconType.Outline.Plus" OnClick="@(() => _navManager.NavigateTo("/Recipes/Create"))" />
+        </GridCol>
+    </GridRow>
+
+    @foreach (var group in filteredRecipes)
+    {
+        <Divider Orientation="left" Style="font-weight:bold">@group.Key</Divider>
+        <AntList Grid="grid" DataSource="@group">
+            <ListItem>
+                <Card Size="small" Hoverable Bordered>
+                <Cover>
+                    <img src="@context.Image" />
+                </Cover>
+                <ChildContent>
+                    <CardMeta Title="@context.Name" />
+                </ChildContent>
+                <ActionTemplate>
+                    <CardAction><Icon Type="shopping-cart" OnClick="@(() => _iGroceryListService.AddGrocery(AsGroceries(context)))" /></CardAction>
+                    <CardAction><Icon Type="profile" /></CardAction>
+                    <CardAction><Icon Type="partition" /></CardAction>
+                    <CardAction><Icon Type="edit" OnClick="@(() => _navManager.NavigateTo($"/Recipes/Update/{context.Id}"))" /></CardAction>
+                </ActionTemplate>
+            </Card>
+        </ListItem>
+    </AntList>
+    }
+}
+
+@code {
+    RenderFragment loadingIcon = @<Icon Type="loading" Theme="outline" Style="font-size: 24px" Spin />;
+}

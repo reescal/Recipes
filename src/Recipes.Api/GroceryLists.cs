@@ -15,6 +15,7 @@ using static Recipes.Shared.Constants.ContentTypes;
 using Recipes.Features.GroceryList.Get;
 using Recipes.Features.GroceryList.AddGrocery;
 using Recipes.Features.GroceryList.Update;
+using Recipes.Shared;
 
 namespace Recipes.Api;
 public class GroceryLists
